@@ -1,29 +1,41 @@
-![WeaveIt Website](public/assets/wlogo.jpg)
+# WeaveIt Agent
 
-A modern, responsive website for WeaveIt - a powerful TypeScript SDK that transforms code tutorials into engaging video content.
+AI-powered video generator that transforms code tutorials into professional videos with narration.
 
-🚀 Overview
-This repository contains the source code for the WeaveIt marketing website. The site showcases WeaveIt's capabilities in transforming code tutorials into dynamic multimedia content with slides, audio narration, and AI assistance.
+## Architecture
 
-✨ Features
-Responsive Design: Fully responsive layout that works on mobile, tablet, and desktop devices
-Modern UI: Clean, dark-themed interface with vibrant green accents
-Interactive Elements: Smooth scrolling, animations, and interactive components
-Performance Optimized: Fast loading times and optimized assets
-SEO Ready: Structured for search engine optimization
+```
+app/
+├── components/          # React components
+│   ├── HomePage.tsx    # Landing page
+│   ├── AppPage.tsx     # Studio wrapper
+│   ├── WeaveItApp.tsx  # Main video generator
+│   ├── Navbar.tsx      # Navigation
+│   └── Footer.tsx      # Footer
+├── studio/             # /studio route
+│   └── page.tsx        # Studio page entry
+├── api/                # API routes
+│   └── generate.ts     # Video generation endpoint
+└── layout.tsx          # Root layout + wallet provider
 
-🛠️ Technologies Used
-React: UI library for building the user interface
-TypeScript: Type-safe JavaScript for better developer experience
-Vite: Next-generation frontend tooling
-Tailwind CSS: Utility-first CSS framework
-Lucide React: Beautiful, consistent icons
+weaveit/weaveit-generator/
+├── videoGenerator.ts   # FFmpeg video generation
+├── textToSpeech.ts    # Audio synthesis
+└── codeAnalyzer.ts    # AI script enhancement
 
-📋 Prerequisites
-Node.js (v16 or higher)
-npm or yarn
+components/
+└── wallet-provider.tsx # Solana wallet integration
+```
 
-🔧 Installation
-Clone the repository:
-git clone git@github.com:lawalabdulrazaq/weaveit-webv2.git
-cd weaveit-webv2
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Payment**: Solana Web3.js + Wallet Adapter
+- **Video**: FFmpeg
+- **AI**: Text-to-speech + script analysis
+- **UI**: Tailwind CSS + Lucide Icons
+
+## Routes
+
+- `/` - Landing page
+- `/studio` - Video generation studio (requires wallet)
