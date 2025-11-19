@@ -4,7 +4,14 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react"
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { useCallback, useState } from "react"
 
-const PAYMENT_WALLET = new PublicKey("8SBLkHEM1df3TTXpaZGoY14f5xxQAwskEKEoTuHbCzKP")
+const FEE_WALLET_ADDRESS = process.env.NEXT_PUBLIC_FEE_WALLET || "4YfSTqUkTgfBojJ14wZdaKBvVWfNfyNcDBHsdw8mbanD"
+let PAYMENT_WALLET: PublicKey
+try {
+  PAYMENT_WALLET = new PublicKey(FEE_WALLET_ADDRESS)
+} catch (err) {
+  // fallback to hardcoded address if env var invalid
+  PAYMENT_WALLET = new PublicKey("4YfSTqUkTgfBojJ14wZdaKBvVWfNfyNcDBHsdw8mbanD")
+}
 
 export function useSolanaPayment() {
   const { connection } = useConnection()
@@ -23,7 +30,7 @@ export function useSolanaPayment() {
       try {
         // Get current SOL price in USD (you might want to use a real price API)
         // For now, using a placeholder conversion rate
-        const solPriceUSD = 190; // Replace with actual SOL price fetching
+        const solPriceUSD = 140; // Replace with actual SOL price fetching
         const solAmount = amountUSD / solPriceUSD;
         const lamports = Math.floor(solAmount * LAMPORTS_PER_SOL);
 
