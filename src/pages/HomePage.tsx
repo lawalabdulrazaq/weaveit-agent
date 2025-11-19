@@ -21,8 +21,6 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react"
-import Footer from "../components/Footer"
-import Navbar from "../components/Navbar"
 
 export default function HomePage() {
   const [isPlaying, setIsPlaying] = useState(false)
@@ -56,8 +54,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-[#0a0e17] to-gray-900">
-      {/* Navbar Section */}
-      <Navbar />
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-weaveit-500/5 to-weaveit-600/5"></div>
@@ -157,15 +153,7 @@ export default function HomePage() {
                       </div>
                     </div>
                     <div className="bg-black rounded-lg aspect-video flex items-center justify-center">
-                      {/* <Play className="w-12 h-12 text-weaveit-500" /> */}
-                      <video
-                      controls
-                      className="w-full h-full object-cover"
-                      poster="/placeholder.svg?height=400&width=600&text=Demo+Tutorial+Video"
-                    >
-                      <source src="/demo-video.mp4" type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
+                      <Play className="w-12 h-12 text-weaveit-500" />
                     </div>
                   </div>
                 </div>
@@ -394,8 +382,7 @@ export default function HomePage() {
                     loop
                     poster="/placeholder.svg?height=400&width=600&text=React+useState+Tutorial"
                   >
-                    {/* <source src="/placeholder.svg?height=400&width=600&text=Sample+Tutorial+Video" type="video/mp4" /> */}
-                    <source src="/demo-video.mp4" type="video/mp4" />
+                    <source src="/placeholder.svg?height=400&width=600&text=Sample+Tutorial+Video" type="video/mp4" />
                   </video>
 
                   {!isPlaying && (
@@ -411,7 +398,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-4 flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Duration: 1:19</span>
+                  <span className="text-gray-400">Duration: 2:34</span>
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-1">
                       <Star className="w-4 h-4 text-yellow-400" />
@@ -456,7 +443,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-white mb-6">Ready to Transform Your Content?</h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join creators who are already using WeaveIt to create amazing tutorial videos
+            Join thousands of creators who are already using WeaveIt to create amazing tutorial videos
           </p>
           <div className="flex justify-center">
             <Link
@@ -470,9 +457,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }

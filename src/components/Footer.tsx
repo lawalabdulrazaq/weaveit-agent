@@ -22,7 +22,7 @@ export default function Footer() {
             </p>
             <div className="flex space-x-6">
               <a
-                href="https://x.com/weaveItAgent"
+                href="https://x.com/weaveit_ai"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
@@ -31,7 +31,7 @@ export default function Footer() {
                 <Twitter className="h-6 w-6" />
               </a>
               <a
-                href="https://github.com/lawalabdulrazaq/weaveit-agent"
+                href="https://github.com/weaveit-ai"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
@@ -40,7 +40,7 @@ export default function Footer() {
                 <Github className="h-6 w-6" />
               </a>
               <a
-                href="mailto:weaveitagent@gmail.com"
+                href="mailto:hello@weaveit.ai"
                 className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
               >
                 <span className="sr-only">Email</span>
@@ -113,7 +113,7 @@ export default function Footer() {
                       Examples
                     </a>
                   </li>
-                  {/* <li>
+                  <li>
                     <a
                       href="https://blog.weaveit.ai"
                       target="_blank"
@@ -132,7 +132,7 @@ export default function Footer() {
                     >
                       Status
                     </a>
-                  </li> */}
+                  </li>
                 </ul>
               </div>
             </div>
@@ -151,14 +151,14 @@ export default function Footer() {
                   </li>
                   <li>
                     <a
-                      href="mailto:temitopelawal925@gmail.com"
+                      href="mailto:hello@weaveit.ai"
                       className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200 flex items-center"
                     >
                       <MessageCircle className="w-4 h-4 mr-2" />
                       Contact
                     </a>
                   </li>
-                  {/* <li>
+                  <li>
                     <a
                       href="https://careers.weaveit.ai"
                       target="_blank"
@@ -175,7 +175,7 @@ export default function Footer() {
                     >
                       Press Kit
                     </a>
-                  </li> */}
+                  </li>
                 </ul>
               </div>
               <div className="mt-12 md:mt-0">
@@ -197,14 +197,14 @@ export default function Footer() {
                       Terms of Service
                     </a>
                   </li>
-                  {/* <li>
+                  <li>
                     <a
                       href="/security"
                       className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
                     >
                       Security
                     </a>
-                  </li> */}
+                  </li>
                   <li>
                     <a
                       href="/cookies"
@@ -224,7 +224,7 @@ export default function Footer() {
           <div className="md:flex md:items-center md:justify-between">
             <div className="flex space-x-6 md:order-2">
               <a
-                href="https://x.com/weaveItAgent"
+                href="https://x.com/weaveit_ai"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
@@ -233,7 +233,7 @@ export default function Footer() {
                 <Twitter className="h-5 w-5" />
               </a>
               <a
-                href="https://github.com/lawalabdulrazaq/weaveit-agent"
+                href="https://github.com/weaveit-ai"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
@@ -242,7 +242,7 @@ export default function Footer() {
                 <Github className="h-5 w-5" />
               </a>
               <a
-                href="mailto:weaveitagent@gmail.com"
+                href="mailto:hello@weaveit.ai"
                 className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
               >
                 <span className="sr-only">Email</span>
