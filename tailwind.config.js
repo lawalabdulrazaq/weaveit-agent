@@ -51,7 +51,6 @@ module.exports = {
           900: '#005500',
           950: '#003300',
         },
-      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

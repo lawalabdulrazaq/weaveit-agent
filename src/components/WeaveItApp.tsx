@@ -1,10 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
-import { useWallet } from "@solana/wallet-adapter-react"
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"
-import { useSolanaPayment } from "../../hooks/use-solana-payment"
+import { useState, useRef } from "react"
 import {
   Download,
   Play,
@@ -34,16 +31,6 @@ interface VideoDisplayProps {
   onClose?: () => void
 }
 
-
-const getBackendUrl = (path: string) => {
-  const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
-  if (!path.startsWith("http")) {
-    // Remove trailing slash if present
-    return backendBaseUrl.replace(/\/$/, "") + path
-  }
-  return path
-}
-
 const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generated Tutorial Video", onClose }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
@@ -53,17 +40,9 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
   const [currentTime, setCurrentTime] = useState(0)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // Always use absolute backend URL for video
-  const absoluteVideoUrl = getBackendUrl(videoUrl)
-
-  // Log when video URL changes
-  useEffect(() => {
-    console.log("Video URL in display component:", absoluteVideoUrl)
-  }, [absoluteVideoUrl])
-
   const handleDownload = async () => {
     try {
-      const response = await fetch(absoluteVideoUrl)
+      const response = await fetch(videoUrl)
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement("a")
@@ -84,14 +63,14 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
         await navigator.share({
           title: title,
           text: "Check out this AI-generated tutorial video!",
-          url: absoluteVideoUrl,
+          url: videoUrl,
         })
       } catch (error) {
         console.error("Error sharing:", error)
       }
     } else {
       try {
-        await navigator.clipboard.writeText(absoluteVideoUrl)
+        await navigator.clipboard.writeText(videoUrl)
         // Show toast notification
         const toast = document.createElement("div")
         toast.className = "fixed top-4 right-4 bg-weaveit-500 text-white px-4 py-2 rounded-lg shadow-lg z-50"
@@ -174,22 +153,19 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
       >
         <video
           ref={videoRef}
-          src={absoluteVideoUrl}
+          src="/placeholder.svg?height=500&width=900&text=Sample+Tutorial+Video"
           className="w-full h-auto max-h-[60vh] object-contain"
           preload="metadata"
-          controls
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onTimeUpdate={(e) => {
-            if (videoRef.current) {
-              setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100)
-              setCurrentTime(videoRef.current.currentTime)
-            }
+            const video = e.target as HTMLVideoElement
+            setCurrentTime(video.currentTime)
+            setProgress((video.currentTime / video.duration) * 100)
           }}
           onLoadedMetadata={(e) => {
-            if (videoRef.current) {
-              setDuration(videoRef.current.duration)
-            }
+            const video = e.target as HTMLVideoElement
+            setDuration(video.duration)
           }}
         >
           Your browser does not support the video tag.
@@ -281,7 +257,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
   )
 }
 
-// Enhanced Script Form Component with Payment Integration
+// Enhanced Script Form Component
 interface ScriptFormProps {
   onVideoGenerated: (videoUrl: string, title: string) => void
 }
@@ -293,10 +269,6 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loadingStep, setLoadingStep] = useState("")
-  const [paymentProcessing, setPaymentProcessing] = useState(false)
-  const { publicKey } = useWallet()
-
-  const { sendPayment, getSolPrice, isProcessing } = useSolanaPayment()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -315,65 +287,6 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
     setError("")
     setSuccess("")
 
-    try {
-      setLoadingStep("Processing payment...")
-      setPaymentProcessing(true)
-
-      const paymentResult = await sendPayment(0.5) // $0.50 in SOL
-      console.log("Payment completed:", paymentResult)
-
-      setPaymentProcessing(false)
-      setLoadingStep("Payment confirmed! Generating video...")
-
-      const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
-
-      const response = await fetch(`${backendBaseUrl}/generate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          script,
-          title,
-          transactionSignature: paymentResult.signature,
-          walletAddress: publicKey?.toBase58(),
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to start video generation")
-      }
-
-      const videoData = await response.json()
-      console.log("Video generation started:", videoData)
-
-      // setLoadingStep("Generating AI narration...")
-      // await pollVideoStatus(videoData.contentId, videoData.title || title)
-      onVideoGenerated(videoData.videoUrl, videoData.title || title)
-      setSuccess("Video generated successfully!")
-    } catch (err: any) {
-      console.error("Generation failed:", err)
-      if (err.message?.includes("Wallet not connected")) {
-        setError("Please connect your wallet to generate videos")
-      } else if (err.message?.includes("insufficient funds")) {
-        setError("Insufficient SOL balance for payment")
-      } else {
-        setError("Failed to process payment or generate video. Please try again.")
-      }
-    } finally {
-      setLoading(false)
-      setLoadingStep("")
-      setPaymentProcessing(false)
-    }
-  }
-
-  const pollVideoStatus = async (contentId: string, videoTitle: string) => {
-    if (!contentId) {
-      console.error("No content ID provided for polling")
-      setError("Missing video ID")
-      return
-    }
-
     const steps = [
       "Analyzing your script...",
       "Generating AI narration...",
@@ -382,51 +295,23 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
       "Finalizing output...",
     ]
 
-    let stepIndex = 0
-    const maxAttempts = 60 // 5 minutes max
-    let attempts = 0
-
-    const poll = async () => {
-      try {
-        // const statusResponse = await fetch(`/api/videos/status/${contentId}`)
-        const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
-        const statusResponse = await fetch(`${backendBaseUrl}/api/videos/status/${contentId}`)
-        const statusData = await statusResponse.json()
-
-        console.log("Status response:", statusData)
-
-        if (statusData.ready && statusData.contentUrl) {
-          // console.log("Video ready with URL:", statusData.contentUrl)
-          const videoUrl = `${backendBaseUrl}${statusData.contentUrl}`
-          console.log("Video ready with URL:", videoUrl)
-          setSuccess("Video generated successfully! 🎉")
-          onVideoGenerated(videoUrl, videoTitle)
-          // onVideoGenerated(statusData.contentUrl, videoTitle)
-          setScript("")
-          setTitle("")
-          return
-        }
-
-        // Update loading step
-        if (stepIndex < steps.length - 1) {
-          setLoadingStep(steps[stepIndex])
-          stepIndex++
-        }
-
-        attempts++
-        if (attempts >= maxAttempts) {
-          throw new Error("Video generation timed out")
-        }
-
-        // Continue polling
-        setTimeout(poll, 5000) // Check every 5 seconds
-      } catch (error) {
-        console.error("Status polling error:", error)
-        throw error
+    try {
+      for (let i = 0; i < steps.length; i++) {
+        setLoadingStep(steps[i])
+        await new Promise((resolve) => setTimeout(resolve, 1000))
       }
-    }
 
-    await poll()
+      setSuccess("Video generated successfully! 🎉")
+      onVideoGenerated("/api/videos/demo-video.mp4", title)
+
+      setScript("")
+      setTitle("")
+    } catch (err) {
+      setError("Failed to generate video. Please try again.")
+    } finally {
+      setLoading(false)
+      setLoadingStep("")
+    }
   }
 
   const estimateVideoLength = (text: string) => {
@@ -511,21 +396,33 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
       {/* Generation Button */}
       <button
         type="submit"
-        disabled={loading || !script.trim() || !title.trim() || isProcessing}
-        className={`relative overflow-hidden w-full py-6 px-8 rounded-xl font-semibold text-lg flex items-center justify-center space-x-3 ${loading || isProcessing ? "bg-gray-700/50 cursor-not-allowed" : "bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700"} text-white shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 border border-weaveit-500/20`}
+        disabled={loading || !script.trim() || !title.trim()}
+        className={`
+          relative overflow-hidden w-full py-6 px-8 rounded-xl font-semibold text-lg
+          flex items-center justify-center space-x-3
+          ${
+            loading
+              ? "bg-gray-700/50 cursor-not-allowed"
+              : "bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700"
+          }
+          text-white shadow-lg hover:shadow-xl
+          transform transition-all duration-300 hover:scale-[1.02]
+          disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100
+          border border-weaveit-500/20
+        `}
       >
-        {loading || paymentProcessing ? (
+        {loading ? (
           <div className="flex flex-col items-center space-y-2">
             <div className="flex items-center space-x-3">
               <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
-              <span>{paymentProcessing ? "Processing Payment..." : "Generating Your Video..."}</span>
+              <span>Generating Your Video...</span>
             </div>
             {loadingStep && <span className="text-sm text-weaveit-200">{loadingStep}</span>}
           </div>
         ) : (
           <>
             <Zap className="w-6 h-6" />
-            <span>Generate Tutorial Video ($0.50)</span>
+            <span>Generate Tutorial Video</span>
             <ArrowRight className="w-6 h-6" />
           </>
         )}
@@ -600,11 +497,30 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
 
 // Enhanced Wallet Connect Component
 const WalletConnect: React.FC<{ onConnect: () => void }> = ({ onConnect }) => {
-  const { connected, connecting } = useWallet()
+  const [connecting, setConnecting] = useState(false)
+  const [selectedWallet, setSelectedWallet] = useState<string | null>(null)
 
-  if (connected) {
-    onConnect()
-    return null
+  const wallets = [
+    { name: "Phantom", icon: "👻", popular: true },
+    { name: "Backpack", icon: "🎒", popular: true },
+    { name: "Solflare", icon: "☀️", popular: false },
+    { name: "Glow", icon: "✨", popular: false },
+  ]
+
+  const handleConnect = async (walletName: string) => {
+    setSelectedWallet(walletName)
+    setConnecting(true)
+
+    try {
+      // Simulate wallet connection without actual wallet integration
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      setConnecting(false)
+      onConnect()
+    } catch (error) {
+      console.error("Connection simulation error:", error)
+      setConnecting(false)
+      // Handle error gracefully without throwing
+    }
   }
 
   return (
@@ -612,25 +528,18 @@ const WalletConnect: React.FC<{ onConnect: () => void }> = ({ onConnect }) => {
       {connecting && (
         <div className="bg-weaveit-500/10 border border-weaveit-500/30 rounded-xl p-4 flex items-center space-x-3 backdrop-blur-sm">
           <div className="animate-spin rounded-full h-5 w-5 border-2 border-weaveit-500 border-t-transparent"></div>
-          <span className="text-white">Connecting to wallet...</span>
+          <span className="text-white">Connecting to {selectedWallet}...</span>
         </div>
       )}
 
-      <div className="flex justify-center">
-        <WalletMultiButton className="!bg-gradient-to-r !from-weaveit-500 !to-weaveit-600 hover:!from-weaveit-600 hover:!to-weaveit-700 !rounded-xl !font-semibold !py-4 !px-8 !text-lg !transition-all !duration-200 !transform hover:!scale-105" />
-      </div>
-
-      {/* Supported Wallets Info */}
-      {/* <div className="grid sm:grid-cols-2 gap-3">
-        {[
-          { name: "Phantom", icon: "👻", popular: true },
-          { name: "Solflare", icon: "☀️", popular: true },
-          { name: "Alpha", icon: "🚀", popular: false },
-          { name: "Clover", icon: "🍀", popular: false },
-        ].map((wallet) => (
-          <div
+      {/* Wallet Options */}
+      <div className="grid sm:grid-cols-2 gap-3">
+        {wallets.map((wallet) => (
+          <button
             key={wallet.name}
-            className="relative bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 backdrop-blur-sm"
+            onClick={() => handleConnect(wallet.name)}
+            disabled={connecting}
+            className="relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 hover:border-weaveit-500/50 rounded-xl p-4 transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 backdrop-blur-sm group"
           >
             {wallet.popular && (
               <div className="absolute -top-2 -right-2 bg-weaveit-500 text-white text-xs px-2 py-1 rounded-full">
@@ -641,12 +550,12 @@ const WalletConnect: React.FC<{ onConnect: () => void }> = ({ onConnect }) => {
               <span className="text-2xl">{wallet.icon}</span>
               <div className="text-left">
                 <div className="text-white font-semibold">{wallet.name}</div>
-                <div className="text-gray-400 text-sm">Supported</div>
+                <div className="text-gray-400 text-sm">Connect wallet</div>
               </div>
             </div>
-          </div>
+          </button>
         ))}
-      </div> */}
+      </div>
 
       {/* Security Features */}
       <div className="grid sm:grid-cols-2 gap-4">
@@ -676,21 +585,20 @@ const WalletConnect: React.FC<{ onConnect: () => void }> = ({ onConnect }) => {
 
 // Main WeaveIt App Component
 export default function WeaveItApp() {
-  const { connected, disconnect, publicKey } = useWallet()
+  const [connected, setConnected] = useState(false)
   const [currentVideo, setCurrentVideo] = useState<{ url: string; title: string } | null>(null)
   const [videos, setVideos] = useState<Array<{ id: string; title: string; url: string; createdAt: string }>>([])
 
   const handleConnect = () => {
-    // Connection is handled by the wallet adapter
+    setConnected(true)
   }
 
   const handleDisconnect = () => {
-    disconnect()
+    setConnected(false)
     setCurrentVideo(null)
   }
 
   const handleVideoGenerated = (videoUrl: string, title: string) => {
-    console.log("Video generated with URL:", videoUrl)
     const newVideo = {
       id: Date.now().toString(),
       title,
@@ -699,7 +607,6 @@ export default function WeaveItApp() {
     }
     setVideos((prev) => [newVideo, ...prev])
     setCurrentVideo({ url: videoUrl, title })
-    console.log("Current video set to:", { url: videoUrl, title })
   }
 
   // Show wallet connection if not connected
@@ -746,9 +653,7 @@ export default function WeaveItApp() {
                 </div>
                 <div>
                   <div className="text-sm text-white font-medium">Connected</div>
-                  <div className="text-xs text-gray-400">
-                    {publicKey?.toString().slice(0, 4)}...{publicKey?.toString().slice(-4)}
-                  </div>
+                  <div className="text-xs text-gray-400">Solana Wallet</div>
                 </div>
               </div>
 
