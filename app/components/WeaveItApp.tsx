@@ -37,6 +37,9 @@ interface VideoDisplayProps {
 
 const getBackendUrl = (path: string) => {
   const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
+  if (!path || typeof path !== 'string') {
+    return backendBaseUrl
+  }
   if (!path.startsWith("http")) {
     // Remove trailing slash if present
     return backendBaseUrl.replace(/\/$/, "") + path
@@ -316,6 +319,9 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
     setSuccess("")
 
     try {
+      // PAYMENT TEMPORARILY DISABLED FOR TESTING
+      // Uncomment the block below to re-enable payment
+      /*
       setLoadingStep("Processing payment...")
       setPaymentProcessing(true)
 
@@ -335,6 +341,10 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
       }
 
       setLoadingStep("Payment confirmed! Generating video...")
+      */
+
+      // Skip payment for testing
+      setLoadingStep("Generating video...")
 
       const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
 
@@ -346,22 +356,34 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
         body: JSON.stringify({
           script,
           title,
-          transactionSignature: paymentResult.signature,
+          transactionSignature: "TEST_MODE", // paymentResult.signature when payment is enabled
           walletAddress: publicKey?.toBase58(),
         }),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to start video generation")
+        const errorData = await response.json().catch(() => ({}))
+        console.error("Backend error:", errorData)
+        throw new Error(errorData.error || "Failed to start video generation")
       }
 
       const videoData = await response.json()
-      console.log("Video generation started:", videoData)
+      console.log("Video generation response:", videoData)
 
-      // setLoadingStep("Generating AI narration...")
-      // await pollVideoStatus(videoData.contentId, videoData.title || title)
-      onVideoGenerated(videoData.videoUrl, videoData.title || title)
+      // Construct video URL from contentId
+      const videoUrl = videoData.contentId 
+        ? `${backendBaseUrl}/api/videos/${videoData.contentId}`
+        : videoData.videoUrl
+      
+      if (!videoUrl) {
+        throw new Error("No video URL or content ID received from backend")
+      }
+
+      console.log("Video URL constructed:", videoUrl)
+      onVideoGenerated(videoUrl, videoData.title || title)
       setSuccess("Video generated successfully!")
+      setScript("")
+      setTitle("")
     } catch (err: any) {
       console.error("Generation failed:", err)
       if (err.message?.includes("Wallet not connected")) {
@@ -369,7 +391,7 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
       } else if (err.message?.includes("insufficient funds")) {
         setError("Insufficient SOL balance for payment")
       } else {
-        setError("Failed to process payment or generate video. Please try again.")
+        setError("Failed to generate video. Please try again.")
       }
     } finally {
       setLoading(false)
@@ -536,7 +558,7 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
         ) : (
           <>
             <Zap className="w-6 h-6" />
-            <span>Generate Tutorial Video ($0.50)</span>
+            <span>Generate Tutorial Video (FREE - Testing Mode)</span>
             <ArrowRight className="w-6 h-6" />
           </>
         )}
