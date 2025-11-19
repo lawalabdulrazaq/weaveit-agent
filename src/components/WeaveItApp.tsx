@@ -323,11 +323,22 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
       console.log("Payment completed:", paymentResult)
 
       setPaymentProcessing(false)
+
+      //check fee payment result
+      if (!paymentResult || !paymentResult.success) {
+        console.warn("Payment not successful, aborting generation", paymentResult)
+        setError(paymentResult?.error || "Payment failed or was rejected")
+        setLoading(false)
+        setLoadingStep("")
+        setPaymentProcessing(false)
+        return
+      }
+
       setLoadingStep("Payment confirmed! Generating video...")
 
       const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
 
-      const response = await fetch(`${backendBaseUrl}/generate`, {
+      const response = await fetch(`${backendBaseUrl}/api/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

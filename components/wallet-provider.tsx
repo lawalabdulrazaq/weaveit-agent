@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useMemo } from "react"
+import { useMemo, useEffect } from "react"
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react"
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base"
 import {
@@ -42,6 +42,17 @@ export function SolanaWalletProvider({ children }: { children: React.ReactNode }
     const endpoints = network === WalletAdapterNetwork.Devnet ? devnetEndpoints : mainnetEndpoints
     return endpoints[0] // Use the first reliable endpoint
   }, [network])
+
+  useEffect(() => {
+    try {
+      console.log("Solana Wallet Provider configured:", {
+        envNetwork: process.env.NEXT_PUBLIC_SOLANA_NETWORK,
+        endpoint,
+      })
+    } catch (err) {
+      // ignore
+    }
+  }, [endpoint])
 
   const wallets = useMemo(
     () => [

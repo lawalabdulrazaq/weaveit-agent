@@ -27,3 +27,7 @@ npm or yarn
 Clone the repository:
 git clone git@github.com:lawalabdulrazaq/weaveit-webv2.git
 cd weaveit-webv2
+
+
+# Example: airdrop 1 SOL to your public key (replace PUBKEY)
+`solana airdrop 1 <YOUR_PUBKEY> --url https://api.devnet.solana.com`
