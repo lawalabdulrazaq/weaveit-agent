@@ -684,6 +684,48 @@ export default function WeaveItApp() {
   const { connected, disconnect, publicKey } = useWallet()
   const [currentVideo, setCurrentVideo] = useState<{ url: string; title: string } | null>(null)
   const [videos, setVideos] = useState<Array<{ id: string; title: string; url: string; createdAt: string }>>([])
+  const [loadingVideos, setLoadingVideos] = useState(false)
+
+  // Fetch user's videos when wallet connects
+  useEffect(() => {
+    const fetchUserVideos = async () => {
+      if (!connected || !publicKey) {
+        setVideos([])
+        return
+      }
+
+      setLoadingVideos(true)
+      try {
+        const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
+        const walletAddress = publicKey.toBase58()
+        const response = await fetch(`${backendBaseUrl}/api/wallet/${walletAddress}/videos`)
+
+        if (!response.ok) {
+          console.error("Failed to fetch videos:", response.statusText)
+          return
+        }
+
+        const data = await response.json()
+        console.log("Fetched videos:", data)
+
+        // Transform backend response to match our video format
+        const fetchedVideos = data.videos.map((video: any) => ({
+          id: video.video_id,
+          title: video.title || `Video ${video.video_id.slice(0, 8)}`,
+          url: `${backendBaseUrl}${video.video_url}`,
+          createdAt: video.created_at,
+        }))
+
+        setVideos(fetchedVideos)
+      } catch (error) {
+        console.error("Error fetching videos:", error)
+      } finally {
+        setLoadingVideos(false)
+      }
+    }
+
+    fetchUserVideos()
+  }, [connected, publicKey])
 
   const handleConnect = () => {
     // Connection is handled by the wallet adapter
@@ -696,13 +738,31 @@ export default function WeaveItApp() {
 
   const handleVideoGenerated = (videoUrl: string, title: string) => {
     console.log("Video generated with URL:", videoUrl)
+    
+    // Extract video ID from URL if available (e.g., /api/videos/79b0beb7-ac8a-4ce1-8429-4af1b8caed3d)
+    const videoIdMatch = videoUrl.match(/\/api\/videos\/([a-f0-9-]+)/i)
+    const videoId = videoIdMatch ? videoIdMatch[1] : `local-${Date.now()}`
+    
     const newVideo = {
-      id: Date.now().toString(),
+      id: videoId,
       title,
       url: videoUrl,
       createdAt: new Date().toISOString(),
     }
-    setVideos((prev) => [newVideo, ...prev])
+    
+    // Avoid duplicates - check if video already exists
+    setVideos((prev) => {
+      const existingIndex = prev.findIndex(v => v.id === videoId)
+      if (existingIndex >= 0) {
+        // Update existing video
+        const updated = [...prev]
+        updated[existingIndex] = newVideo
+        return updated
+      }
+      // Add new video at the beginning
+      return [newVideo, ...prev]
+    })
+    
     setCurrentVideo({ url: videoUrl, title })
     console.log("Current video set to:", { url: videoUrl, title })
   }
@@ -812,7 +872,12 @@ export default function WeaveItApp() {
                 </div>
               </div>
 
-              {videos.length === 0 ? (
+              {loadingVideos ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-2 border-weaveit-500 border-t-transparent mx-auto mb-4"></div>
+                  <p className="text-gray-400">Loading your videos...</p>
+                </div>
+              ) : videos.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-20 h-20 bg-gray-700/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Video className="w-10 h-10 text-gray-500" />
