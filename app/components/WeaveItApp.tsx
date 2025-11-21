@@ -297,6 +297,7 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
   const [success, setSuccess] = useState("")
   const [loadingStep, setLoadingStep] = useState("")
   const [paymentProcessing, setPaymentProcessing] = useState(false)
+  const [generationType, setGenerationType] = useState<"video" | "audio">("video")
   const { publicKey } = useWallet()
 
   const { sendPayment, getSolPrice, isProcessing } = useSolanaPayment()
@@ -348,7 +349,10 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
 
       const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
 
-      const response = await fetch(`${backendBaseUrl}/api/generate`, {
+      // Choose endpoint based on generation type
+      const endpoint = generationType === "audio" ? "/api/generate/audio" : "/api/generate"
+      
+      const response = await fetch(`${backendBaseUrl}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -368,20 +372,32 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
       }
 
       const videoData = await response.json()
-      console.log("Video generation response:", videoData)
+      console.log("Generation response:", videoData)
 
-      // Construct video URL from contentId
-      const videoUrl = videoData.contentId 
-        ? `${backendBaseUrl}/api/videos/${videoData.contentId}`
-        : videoData.videoUrl
+      // Construct URL based on generation type and response data
+      let contentUrl: string | null = null
       
-      if (!videoUrl) {
-        throw new Error("No video URL or content ID received from backend")
+      if (generationType === "audio") {
+        // For audio generation, use audio-specific endpoint
+        const audioId = videoData.audioId
+        if (audioId) {
+          contentUrl = `${backendBaseUrl}/api/audio/${audioId}`
+        }
+      } else {
+        // For video generation, use video endpoint
+        const contentId = videoData.contentId || videoData.videoId
+        if (contentId) {
+          contentUrl = `${backendBaseUrl}/api/videos/${contentId}`
+        }
+      }
+      
+      if (!contentUrl) {
+        throw new Error(`No ${generationType} URL or content ID received from backend`)
       }
 
-      console.log("Video URL constructed:", videoUrl)
-      onVideoGenerated(videoUrl, videoData.title || title)
-      setSuccess("Video generated successfully!")
+      console.log("Content URL constructed:", contentUrl)
+      onVideoGenerated(contentUrl, videoData.title || title)
+      setSuccess(`${generationType === "video" ? "Video" : "Audio"} generated successfully!`)
       setScript("")
       setTitle("")
     } catch (err: any) {
@@ -481,6 +497,53 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Generation Type Toggle */}
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-white mb-3">Generation Type</label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setGenerationType("video")}
+            className={`relative overflow-hidden py-4 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-3 ${
+              generationType === "video"
+                ? "bg-gradient-to-r from-weaveit-500 to-weaveit-600 text-white shadow-lg shadow-weaveit-500/30 scale-[1.02]"
+                : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50"
+            }`}
+          >
+            <Video className="w-5 h-5" />
+            <span>Full Video</span>
+            {generationType === "video" && (
+              <div className="absolute top-2 right-2">
+                <CheckCircle className="w-4 h-4" />
+              </div>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setGenerationType("audio")}
+            className={`relative overflow-hidden py-4 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-3 ${
+              generationType === "audio"
+                ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30 scale-[1.02]"
+                : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50"
+            }`}
+          >
+            <Volume2 className="w-5 h-5" />
+            <span>Audio Only</span>
+            {generationType === "audio" && (
+              <div className="absolute top-2 right-2">
+                <CheckCircle className="w-4 h-4" />
+              </div>
+            )}
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 mt-2">
+          {generationType === "video"
+            ? "Generate a complete video tutorial with visuals and narration"
+            : "Generate only the audio narration (faster and lighter)"}
+        </p>
+      </div>
+
       {/* Title Input */}
       <div className="space-y-2">
         <label htmlFor="title" className="block text-sm font-semibold text-white">
@@ -545,20 +608,20 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
       <button
         type="submit"
         disabled={loading || !script.trim() || !title.trim() || isProcessing}
-        className={`relative overflow-hidden w-full py-6 px-8 rounded-xl font-semibold text-lg flex items-center justify-center space-x-3 ${loading || isProcessing ? "bg-gray-700/50 cursor-not-allowed" : "bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700"} text-white shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 border border-weaveit-500/20`}
+        className={`relative overflow-hidden w-full py-6 px-8 rounded-xl font-semibold text-lg flex items-center justify-center space-x-3 ${loading || isProcessing ? "bg-gray-700/50 cursor-not-allowed" : generationType === "video" ? "bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700" : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"} text-white shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 border ${generationType === "video" ? "border-weaveit-500/20" : "border-purple-500/20"}`}
       >
         {loading || paymentProcessing ? (
           <div className="flex flex-col items-center space-y-2">
             <div className="flex items-center space-x-3">
               <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
-              <span>{paymentProcessing ? "Processing Payment..." : "Generating Your Video..."}</span>
+              <span>{paymentProcessing ? "Processing Payment..." : `Generating Your ${generationType === "video" ? "Video" : "Audio"}...`}</span>
             </div>
             {loadingStep && <span className="text-sm text-weaveit-200">{loadingStep}</span>}
           </div>
         ) : (
           <>
             <Zap className="w-6 h-6" />
-            <span>Generate Tutorial Video (FREE - Testing Mode)</span>
+            <span>Generate {generationType === "video" ? "Tutorial Video" : "Audio Narration"} (FREE - Testing Mode)</span>
             <ArrowRight className="w-6 h-6" />
           </>
         )}
@@ -686,9 +749,9 @@ export default function WeaveItApp() {
   const [videos, setVideos] = useState<Array<{ id: string; title: string; url: string; createdAt: string }>>([])
   const [loadingVideos, setLoadingVideos] = useState(false)
 
-  // Fetch user's videos when wallet connects
+  // Fetch user's videos and audio when wallet connects
   useEffect(() => {
-    const fetchUserVideos = async () => {
+    const fetchUserContent = async () => {
       if (!connected || !publicKey) {
         setVideos([])
         return
@@ -698,33 +761,36 @@ export default function WeaveItApp() {
       try {
         const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
         const walletAddress = publicKey.toBase58()
-        const response = await fetch(`${backendBaseUrl}/api/wallet/${walletAddress}/videos`)
+        
+        // Fetch all content (videos and audio) from unified endpoint
+        const response = await fetch(`${backendBaseUrl}/api/wallet/${walletAddress}/content`)
 
         if (!response.ok) {
-          console.error("Failed to fetch videos:", response.statusText)
+          console.error("Failed to fetch content:", response.statusText)
           return
         }
 
         const data = await response.json()
-        console.log("Fetched videos:", data)
+        console.log("Fetched content:", data)
 
-        // Transform backend response to match our video format
-        const fetchedVideos = data.videos.map((video: any) => ({
-          id: video.video_id,
-          title: video.title || `Video ${video.video_id.slice(0, 8)}`,
-          url: `${backendBaseUrl}${video.video_url}`,
-          createdAt: video.created_at,
+        // Transform backend response to match our content format
+        const fetchedContent = data.content.map((item: any) => ({
+          id: item.id,
+          title: item.title || `${item.content_type === 'video' ? 'Video' : 'Audio'} ${item.id.slice(0, 8)}`,
+          url: `${backendBaseUrl}${item.url}`,
+          createdAt: item.created_at,
+          contentType: item.content_type,
         }))
 
-        setVideos(fetchedVideos)
+        setVideos(fetchedContent)
       } catch (error) {
-        console.error("Error fetching videos:", error)
+        console.error("Error fetching content:", error)
       } finally {
         setLoadingVideos(false)
       }
     }
 
-    fetchUserVideos()
+    fetchUserContent()
   }, [connected, publicKey])
 
   const handleConnect = () => {
@@ -737,34 +803,34 @@ export default function WeaveItApp() {
   }
 
   const handleVideoGenerated = (videoUrl: string, title: string) => {
-    console.log("Video generated with URL:", videoUrl)
+    console.log("Content generated with URL:", videoUrl)
     
-    // Extract video ID from URL if available (e.g., /api/videos/79b0beb7-ac8a-4ce1-8429-4af1b8caed3d)
-    const videoIdMatch = videoUrl.match(/\/api\/videos\/([a-f0-9-]+)/i)
-    const videoId = videoIdMatch ? videoIdMatch[1] : `local-${Date.now()}`
+    // Extract content ID from URL (works for both /api/videos/ and /api/audio/)
+    const contentIdMatch = videoUrl.match(/\/api\/(?:videos|audio)\/([a-f0-9-]+)/i)
+    const contentId = contentIdMatch ? contentIdMatch[1] : `local-${Date.now()}`
     
-    const newVideo = {
-      id: videoId,
+    const newContent = {
+      id: contentId,
       title,
       url: videoUrl,
       createdAt: new Date().toISOString(),
     }
     
-    // Avoid duplicates - check if video already exists
+    // Avoid duplicates - check if content already exists
     setVideos((prev) => {
-      const existingIndex = prev.findIndex(v => v.id === videoId)
+      const existingIndex = prev.findIndex(v => v.id === contentId)
       if (existingIndex >= 0) {
-        // Update existing video
+        // Update existing content
         const updated = [...prev]
-        updated[existingIndex] = newVideo
+        updated[existingIndex] = newContent
         return updated
       }
-      // Add new video at the beginning
-      return [newVideo, ...prev]
+      // Add new content at the beginning
+      return [newContent, ...prev]
     })
     
     setCurrentVideo({ url: videoUrl, title })
-    console.log("Current video set to:", { url: videoUrl, title })
+    console.log("Current content set to:", { url: videoUrl, title })
   }
 
   // Show wallet connection if not connected
@@ -867,23 +933,23 @@ export default function WeaveItApp() {
                   <Video className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Your Videos</h3>
-                  <p className="text-sm text-gray-400">{videos.length} videos created</p>
+                  <h3 className="text-xl font-bold text-white">Your Content</h3>
+                  <p className="text-sm text-gray-400">{videos.length} items created</p>
                 </div>
               </div>
 
               {loadingVideos ? (
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-2 border-weaveit-500 border-t-transparent mx-auto mb-4"></div>
-                  <p className="text-gray-400">Loading your videos...</p>
+                  <p className="text-gray-400">Loading your content...</p>
                 </div>
               ) : videos.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-20 h-20 bg-gray-700/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Video className="w-10 h-10 text-gray-500" />
                   </div>
-                  <p className="text-gray-400 mb-2">No videos yet</p>
-                  <p className="text-sm text-gray-500">Create your first tutorial video to get started!</p>
+                  <p className="text-gray-400 mb-2">No content yet</p>
+                  <p className="text-sm text-gray-500">Create your first tutorial to get started!</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
