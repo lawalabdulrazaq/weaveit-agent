@@ -25,6 +25,20 @@ import {
   Maximize,
   Zap,
   Shield,
+  Compass,
+  Plus,
+  BarChart3,
+  Settings,
+  Grid3x3,
+  Upload,
+  Music,
+  Map,
+  BookOpen,
+  MessageCircle,
+  Filter,
+  Search,
+  Code,
+  ChevronRight,
 } from "lucide-react"
 
 // Enhanced Video Display Component
@@ -97,7 +111,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
         await navigator.clipboard.writeText(absoluteVideoUrl)
         // Show toast notification
         const toast = document.createElement("div")
-        toast.className = "fixed top-4 right-4 bg-weaveit-500 text-white px-4 py-2 rounded-lg shadow-lg z-50"
+        toast.className = "fixed top-4 right-4 bg-violet-600 text-white px-4 py-2 rounded-lg shadow-lg z-50"
         toast.textContent = "Video URL copied to clipboard!"
         document.body.appendChild(toast)
         setTimeout(() => document.body.removeChild(toast), 3000)
@@ -141,20 +155,20 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-r from-weaveit-500 to-weaveit-600 rounded-xl flex items-center justify-center">
-            <Play className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-lg flex items-center justify-center">
+            <Play className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-white">{title}</h3>
-            <p className="text-sm text-gray-400">AI-generated tutorial video</p>
+            <h3 className="text-xl font-semibold text-white">{title}</h3>
+            <p className="text-sm text-slate-400">AI-generated tutorial video</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <button
-            onClick={handleShare}
-            className="bg-gray-800/50 hover:bg-weaveit-500/20 text-white p-3 rounded-xl transition-all duration-200 hover:scale-105 backdrop-blur-sm border border-gray-700/50"
-            title="Share video"
-          >
+            <button
+              onClick={handleShare}
+              className="bg-gray-800/50 hover:bg-violet-600/20 text-white p-3 rounded-xl transition-all duration-200 hover:scale-105 backdrop-blur-sm border border-gray-700/50"
+              title="Share video"
+            >
             <Share2 className="w-5 h-5" />
           </button>
           {onClose && (
@@ -203,9 +217,9 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
           className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 transition-all duration-300 ${showControls ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
         >
           {/* Progress Bar */}
-          <div className="w-full bg-gray-700/50 rounded-full h-1 mb-4">
+              <div className="w-full bg-gray-700/50 rounded-full h-1 mb-4">
             <div
-              className="bg-gradient-to-r from-weaveit-500 to-weaveit-600 h-1 rounded-full transition-all duration-200"
+              className="bg-gradient-to-r from-violet-600 to-indigo-500 h-1 rounded-full transition-all duration-200"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -214,7 +228,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
             <div className="flex items-center space-x-4">
               <button
                 onClick={togglePlay}
-                className="bg-weaveit-500 hover:bg-weaveit-600 text-white p-3 rounded-full transition-all duration-200 hover:scale-110 shadow-lg"
+                className="bg-violet-600 hover:bg-indigo-500 text-white p-3 rounded-full transition-all duration-200 hover:scale-110 shadow-lg"
               >
                 {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
               </button>
@@ -245,7 +259,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
       <div className="flex flex-wrap gap-4">
         <button
           onClick={handleDownload}
-          className="flex-1 min-w-[200px] bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl"
+          className="flex-1 min-w-[200px] bg-gradient-to-r from-violet-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold py-3 px-5 rounded-xl transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl"
         >
           <Download className="w-5 h-5" />
           <span>Download Video</span>
@@ -253,7 +267,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
 
         <button
           onClick={handleShare}
-          className="flex-1 min-w-[200px] bg-gray-800/50 hover:bg-gray-700/50 text-white font-semibold py-4 px-6 rounded-xl border border-gray-700/50 hover:border-weaveit-500/50 transition-all duration-200 flex items-center justify-center space-x-3 backdrop-blur-sm"
+          className="flex-1 min-w-[200px] bg-gray-800/50 hover:bg-gray-700/50 text-white font-semibold py-3 px-5 rounded-xl border border-gray-700/50 transition-all duration-200 flex items-center justify-center space-x-3 backdrop-blur-sm"
         >
           <Share2 className="w-5 h-5" />
           <span>Share Video</span>
@@ -262,10 +276,10 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
 
       {/* Video Stats */}
       <div className="grid sm:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-weaveit-500/10 to-weaveit-600/10 rounded-xl p-4 border border-weaveit-500/20 text-center backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-violet-600/10 to-indigo-500/10 rounded-xl p-4 border border-violet-600/20 text-center backdrop-blur-sm">
           <div className="text-3xl mb-2">✨</div>
           <div className="text-sm text-white font-semibold">AI Generated</div>
-          <div className="text-xs text-gray-400">Powered by WeaveIt</div>
+          <div className="text-xs text-slate-400">Powered by WeaveIt</div>
         </div>
 
         <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl p-4 border border-blue-500/20 text-center backdrop-blur-sm">
@@ -274,10 +288,10 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
           <div className="text-xs text-gray-400">Professional output</div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/20 text-center backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-violet-600/10 to-indigo-500/10 rounded-xl p-4 border border-violet-600/20 text-center backdrop-blur-sm">
           <div className="text-3xl mb-2">⚡</div>
           <div className="text-sm text-white font-semibold">Fast Creation</div>
-          <div className="text-xs text-gray-400">Generated in minutes</div>
+          <div className="text-xs text-slate-400">Generated in minutes</div>
         </div>
       </div>
     </div>
@@ -287,9 +301,24 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
 // Enhanced Script Form Component with Payment Integration
 interface ScriptFormProps {
   onVideoGenerated: (videoUrl: string, title: string) => void
+  generationType: "video" | "audio"
+  setGenerationType: React.Dispatch<React.SetStateAction<"video" | "audio">>
+  // optional props so parent can control helper CTA visibility and wire handlers
+  videosLength?: number
+  hasCurrentVideo?: boolean
+  onImportRepo?: () => void
+  onUploadClick?: () => void
 }
 
-const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
+const ScriptForm: React.FC<ScriptFormProps> = ({
+  onVideoGenerated,
+  generationType,
+  setGenerationType,
+  videosLength = 0,
+  hasCurrentVideo = false,
+  onImportRepo,
+  onUploadClick,
+}) => {
   const [script, setScript] = useState("")
   const [title, setTitle] = useState("")
   const [loading, setLoading] = useState(false)
@@ -297,7 +326,6 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
   const [success, setSuccess] = useState("")
   const [loadingStep, setLoadingStep] = useState("")
   const [paymentProcessing, setPaymentProcessing] = useState(false)
-  const [generationType, setGenerationType] = useState<"video" | "audio">("video")
   const { publicKey } = useWallet()
 
   const { sendPayment, getSolPrice, isProcessing } = useSolanaPayment()
@@ -488,8 +516,8 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
   const getScriptQuality = (text: string) => {
     const wordCount = text.trim().split(/\s+/).length
     if (wordCount < 50) return { quality: "Too short", color: "text-red-400" }
-    if (wordCount < 150) return { quality: "Good", color: "text-yellow-400" }
-    if (wordCount < 500) return { quality: "Excellent", color: "text-green-400" }
+    if (wordCount < 150) return { quality: "Good", color: "text-amber-400" }
+    if (wordCount < 500) return { quality: "Excellent", color: "text-violet-400" }
     return { quality: "Very long", color: "text-blue-400" }
   }
 
@@ -497,52 +525,32 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Generation Type Toggle */}
-      <div className="space-y-2">
-        <label className="block text-sm font-semibold text-white mb-3">Generation Type</label>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setGenerationType("video")}
-            className={`relative overflow-hidden py-4 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-3 ${
-              generationType === "video"
-                ? "bg-gradient-to-r from-weaveit-500 to-weaveit-600 text-white shadow-lg shadow-weaveit-500/30 scale-[1.02]"
-                : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50"
-            }`}
-          >
-            <Video className="w-5 h-5" />
-            <span>Full Video</span>
-            {generationType === "video" && (
-              <div className="absolute top-2 right-2">
-                <CheckCircle className="w-4 h-4" />
-              </div>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setGenerationType("audio")}
-            className={`relative overflow-hidden py-4 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-3 ${
-              generationType === "audio"
-                ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30 scale-[1.02]"
-                : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50"
-            }`}
-          >
-            <Volume2 className="w-5 h-5" />
-            <span>Audio Only</span>
-            {generationType === "audio" && (
-              <div className="absolute top-2 right-2">
-                <CheckCircle className="w-4 h-4" />
-              </div>
-            )}
-          </button>
+      {/* Helper CTA: show when no sources, no current video, and user hasn't typed anything yet */}
+      {(!videosLength || videosLength === 0) && !hasCurrentVideo && !script.trim() && (
+        <div className="border border-slate-800 rounded-lg p-6 text-center text-slate-400">
+          <div className="text-sm font-medium mb-2">Add a source to get started</div>
+          <div className="text-xs mb-4">Upload documents or import a repository to feed the assistant.</div>
+          <div className="flex flex-col items-center justify-center space-y-3">
+            <button
+              type="button"
+              onClick={onUploadClick}
+              className="px-6 py-3 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition font-medium"
+            >
+              Upload a source
+            </button>
+            <div className="text-sm text-slate-400">or</div>
+            <button
+              type="button"
+              onClick={onImportRepo}
+              className="px-4 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60"
+            >
+              Import repository
+            </button>
+          </div>
         </div>
-        <p className="text-xs text-gray-400 mt-2">
-          {generationType === "video"
-            ? "Generate a complete video tutorial with visuals and narration"
-            : "Generate only the audio narration (faster and lighter)"}
-        </p>
-      </div>
+      )}
+
+      {/* Generation type control moved to the right sidebar */}
 
       {/* Title Input */}
       <div className="space-y-2">
@@ -555,7 +563,7 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Enter a descriptive title for your tutorial video..."
-          className="w-full px-4 py-4 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-weaveit-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+          className="w-full px-4 py-4 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
           disabled={loading}
         />
       </div>
@@ -581,7 +589,7 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
           onChange={(e) => setScript(e.target.value)}
           placeholder="Enter your tutorial script here. Explain your code, concepts, or step-by-step instructions that you want to turn into a video tutorial..."
           rows={12}
-          className="w-full px-4 py-4 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-weaveit-500 focus:border-transparent transition-all duration-200 resize-vertical backdrop-blur-sm"
+          className="w-full px-4 py-4 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 resize-vertical backdrop-blur-sm"
           disabled={loading}
         />
         <div className="flex justify-between items-center text-xs text-gray-400">
@@ -608,7 +616,7 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
       <button
         type="submit"
         disabled={loading || !script.trim() || !title.trim() || isProcessing}
-        className={`relative overflow-hidden w-full py-6 px-8 rounded-xl font-semibold text-lg flex items-center justify-center space-x-3 ${loading || isProcessing ? "bg-gray-700/50 cursor-not-allowed" : generationType === "video" ? "bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700" : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"} text-white shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 border ${generationType === "video" ? "border-weaveit-500/20" : "border-purple-500/20"}`}
+        className={`relative overflow-hidden w-full py-4 px-6 rounded-xl font-semibold text-base flex items-center justify-center space-x-3 ${loading || isProcessing ? "bg-gray-700/50 cursor-not-allowed" : generationType === "video" ? "bg-gradient-to-r from-violet-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600" : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"} text-white shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 border ${generationType === "video" ? "border-violet-600/20" : "border-purple-500/20"}`}
       >
         {loading || paymentProcessing ? (
           <div className="flex flex-col items-center space-y-2">
@@ -616,7 +624,7 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
               <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
               <span>{paymentProcessing ? "Processing Payment..." : `Generating Your ${generationType === "video" ? "Video" : "Audio"}...`}</span>
             </div>
-            {loadingStep && <span className="text-sm text-weaveit-200">{loadingStep}</span>}
+            {loadingStep && <span className="text-sm text-violet-200">{loadingStep}</span>}
           </div>
         ) : (
           <>
@@ -636,17 +644,17 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
       )}
 
       {success && (
-        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center space-x-3 backdrop-blur-sm">
-          <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-          <span className="text-green-400">{success}</span>
+        <div className="bg-violet-600/10 border border-violet-600/30 rounded-xl p-4 flex items-center space-x-3 backdrop-blur-sm">
+          <CheckCircle className="w-5 h-5 text-violet-400 flex-shrink-0" />
+          <span className="text-violet-400">{success}</span>
         </div>
       )}
 
       {/* Cost Information */}
-      <div className="bg-gradient-to-r from-weaveit-500/10 to-weaveit-600/10 border border-weaveit-500/30 rounded-xl p-6 backdrop-blur-sm">
+      <div className="bg-gradient-to-r from-violet-600/10 to-indigo-500/10 border border-violet-600/30 rounded-xl p-6 backdrop-blur-sm">
         <div className="flex items-center space-x-3 mb-3">
-          <div className="w-10 h-10 bg-weaveit-500/20 rounded-xl flex items-center justify-center">
-            <DollarSign className="w-5 h-5 text-weaveit-400" />
+          <div className="w-10 h-10 bg-violet-600/20 rounded-xl flex items-center justify-center">
+            <DollarSign className="w-5 h-5 text-violet-300" />
           </div>
           <div>
             <h4 className="font-semibold text-white">Generation Cost</h4>
@@ -654,7 +662,7 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
           </div>
         </div>
         <p className="text-sm text-gray-300 mb-2">
-          Video generation requires a payment of <strong className="text-weaveit-400">$0.50</strong> in SOL to cover AI
+          Video generation requires a payment of <strong className="text-violet-300">$0.50</strong> in SOL to cover AI
           processing costs.
         </p>
         <p className="text-xs text-gray-400">💡 Payment is processed securely through your connected Solana wallet</p>
@@ -673,19 +681,19 @@ const ScriptForm: React.FC<ScriptFormProps> = ({ onVideoGenerated }) => {
         </div>
         <ul className="text-sm text-gray-300 space-y-2">
           <li className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-weaveit-500 rounded-full"></div>
+            <div className="w-1.5 h-1.5 bg-violet-600 rounded-full"></div>
             <span>Be clear and specific in your explanations</span>
           </li>
           <li className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-weaveit-500 rounded-full"></div>
+            <div className="w-1.5 h-1.5 bg-violet-600 rounded-full"></div>
             <span>Include step-by-step instructions</span>
           </li>
           <li className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-weaveit-500 rounded-full"></div>
+            <div className="w-1.5 h-1.5 bg-violet-600 rounded-full"></div>
             <span>Mention specific code examples or concepts</span>
           </li>
           <li className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-weaveit-500 rounded-full"></div>
+            <div className="w-1.5 h-1.5 bg-violet-600 rounded-full"></div>
             <span>Keep sections organized with clear transitions</span>
           </li>
         </ul>
@@ -706,21 +714,21 @@ const WalletConnect: React.FC<{ onConnect: () => void }> = ({ onConnect }) => {
   return (
     <div className="space-y-6">
       {connecting && (
-        <div className="bg-weaveit-500/10 border border-weaveit-500/30 rounded-xl p-4 flex items-center space-x-3 backdrop-blur-sm">
-          <div className="animate-spin rounded-full h-5 w-5 border-2 border-weaveit-500 border-t-transparent"></div>
+        <div className="bg-violet-600/10 border border-violet-600/30 rounded-xl p-4 flex items-center space-x-3 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-5 w-5 border-2 border-violet-600 border-t-transparent"></div>
           <span className="text-white">Connecting to wallet...</span>
         </div>
       )}
 
       <div className="flex justify-center">
-        <WalletMultiButton className="!bg-gradient-to-r !from-weaveit-500 !to-weaveit-600 hover:!from-weaveit-600 hover:!to-weaveit-700 !rounded-xl !font-semibold !py-4 !px-8 !text-lg !transition-all !duration-200 !transform hover:!scale-105" />
+        <WalletMultiButton className="!bg-gradient-to-r !from-violet-600 !to-indigo-500 hover:!from-indigo-500 hover:!to-indigo-600 !rounded-xl !font-semibold !py-3 !px-6 !text-base !transition-all !duration-200 !transform hover:!scale-105" />
       </div>
 
       {/* Security Features */}
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30 backdrop-blur-sm">
-          <div className="flex items-center space-x-3 mb-2">
-            <Shield className="w-5 h-5 text-green-400" />
+            <div className="flex items-center space-x-3 mb-2">
+            <Shield className="w-5 h-5 text-violet-400" />
             <h4 className="font-semibold text-white">Secure Connection</h4>
           </div>
           <p className="text-sm text-gray-400">
@@ -729,8 +737,8 @@ const WalletConnect: React.FC<{ onConnect: () => void }> = ({ onConnect }) => {
         </div>
 
         <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30 backdrop-blur-sm">
-          <div className="flex items-center space-x-3 mb-2">
-            <Zap className="w-5 h-5 text-weaveit-500" />
+            <div className="flex items-center space-x-3 mb-2">
+            <Zap className="w-5 h-5 text-violet-400" />
             <h4 className="font-semibold text-white">Fast & Easy</h4>
           </div>
           <p className="text-sm text-gray-400">
@@ -748,6 +756,7 @@ export default function WeaveItApp() {
   const [currentVideo, setCurrentVideo] = useState<{ url: string; title: string } | null>(null)
   const [videos, setVideos] = useState<Array<{ id: string; title: string; url: string; createdAt: string }>>([])
   const [loadingVideos, setLoadingVideos] = useState(false)
+  const [generationType, setGenerationType] = useState<"video" | "audio">("video")
 
   // Fetch user's videos and audio when wallet connects
   useEffect(() => {
@@ -833,14 +842,75 @@ export default function WeaveItApp() {
     console.log("Current content set to:", { url: videoUrl, title })
   }
 
+  // File input ref for uploads
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    try {
+      const form = new FormData()
+      Array.from(files).forEach((f) => form.append('files', f))
+      const resp = await fetch(getBackendUrl('/api/upload'), {
+        method: 'POST',
+        body: form,
+      })
+      if (!resp.ok) {
+        console.error('Upload failed', resp.statusText)
+        return
+      }
+      const data = await resp.json()
+      // Expect backend to return { url, title }
+      const uploaded = data[0] || data
+      if (uploaded && uploaded.url) {
+        handleVideoGenerated(uploaded.url, uploaded.title || 'Uploaded')
+      }
+    } catch (err) {
+      console.error('Upload error', err)
+    } finally {
+      // reset input
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleImportRepo = async () => {
+    const repoUrl = window.prompt('Enter repository URL to import (e.g. https://github.com/user/repo)')
+    if (!repoUrl) return
+    try {
+      const resp = await fetch(getBackendUrl('/api/import-repo'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo: repoUrl }),
+      })
+      if (!resp.ok) {
+        console.error('Import failed', await resp.text())
+        return
+      }
+      const data = await resp.json()
+      // If backend returns created content, open or add it
+      if (data?.url) {
+        handleVideoGenerated(data.url, data.title || 'Imported repo')
+      } else {
+        // Notify user import started
+        console.log('Repository import started')
+      }
+    } catch (err) {
+      console.error('Import error', err)
+    }
+  }
+
   // Show wallet connection if not connected
   if (!connected) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-gray-800/30 backdrop-blur-xl rounded-3xl p-12 border border-gray-700/30 shadow-2xl text-center">
           <div className="mb-8">
-            <div className="w-20 h-20 bg-weaveit-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Wallet className="w-10 h-10 text-weaveit-400" />
+            <div className="w-20 h-20 bg-gradient-to-r from-violet-600/20 to-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Wallet className="w-10 h-10 text-violet-300" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-4">Connect Your Wallet</h2>
             <p className="text-gray-400 mb-8">
@@ -855,129 +925,184 @@ export default function WeaveItApp() {
 
   // App View
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-[#0a0e17] to-gray-900">
+    <div className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
-      <header className="bg-gray-800/80 backdrop-blur-xl border-b border-gray-700/50 sticky top-0 z-50">
+      <header className="bg-slate-900/70 backdrop-blur-sm border-b border-slate-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-weaveit-500 to-weaveit-600 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between h-14">
+            <div className="flex items-center space-x-3">
+              <button onClick={() => (window.location.href = '/')} className="text-sm text-slate-300 hover:text-white">← Back to Home</button>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-500 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">WeaveIt Studio</h1>
-                <p className="text-sm text-gray-400">AI Video Generator</p>
+                <div className="text-base font-semibold">WeaveIt Studio</div>
+                <div className="text-xs text-slate-400">Create AI-powered tutorial videos...</div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3 bg-gray-800/50 rounded-xl px-4 py-3 border border-gray-700/50 backdrop-blur-sm">
-                <div className="w-8 h-8 bg-weaveit-500/20 rounded-lg flex items-center justify-center">
-                  <Wallet className="w-4 h-4 text-weaveit-400" />
-                </div>
-                <div>
-                  <div className="text-sm text-white font-medium">Connected</div>
-                  <div className="text-xs text-gray-400">
-                    {publicKey?.toString().slice(0, 4)}...{publicKey?.toString().slice(-4)}
-                  </div>
-                </div>
+            <div className="flex items-center space-x-3">
+              <div className="text-sm text-slate-300 text-right">
+                <div className="font-medium">{publicKey ? publicKey.toString().slice(0, 6) + '...' + publicKey.toString().slice(-4) : 'Not connected'}</div>
+                <div className="text-xs text-slate-500">Wallet</div>
               </div>
 
               <button
                 onClick={handleDisconnect}
-                className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm flex items-center space-x-2 transition-all duration-200 backdrop-blur-sm"
+                className="flex items-center space-x-2 px-2 py-1 rounded-md border border-slate-800 bg-slate-800/30 hover:bg-slate-800/50 text-sm"
               >
-                <LogOut className="w-4 h-4" />
-                <span>Disconnect</span>
+                <LogOut className="w-4 h-4 text-slate-200" />
+                <span className="text-sm text-slate-200">Disconnect</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Script Form */}
-            <div className="bg-gray-800/30 backdrop-blur-xl rounded-3xl p-8 border border-gray-700/30 shadow-2xl">
-              <div className="flex items-center space-x-4 mb-8">
-                <div className="w-12 h-12 bg-weaveit-500/20 rounded-xl flex items-center justify-center">
-                  <User className="w-6 h-6 text-weaveit-400" />
-                </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} multiple />
+        <div className="grid grid-cols-12 gap-6">
+          {/* Left: Sources */}
+          <aside className="col-span-12 lg:col-span-3">
+            <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-4 sticky top-24">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">Create Tutorial Video</h2>
-                  <p className="text-gray-400">Transform your script into an engaging video</p>
+                  <h3 className="text-sm font-semibold">Sources</h3>
+                  <p className="text-xs text-slate-400">Add documents or repositories</p>
                 </div>
-              </div>
-              <ScriptForm onVideoGenerated={handleVideoGenerated} />
-            </div>
-
-            {/* Video Display */}
-            {currentVideo && (
-              <div className="bg-gray-800/30 backdrop-blur-xl rounded-3xl p-8 border border-gray-700/30 shadow-2xl">
-                <VideoDisplay
-                  videoUrl={currentVideo.url}
-                  title={currentVideo.title}
-                  onClose={() => setCurrentVideo(null)}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-gray-800/30 backdrop-blur-xl rounded-3xl p-6 border border-gray-700/30 sticky top-28 shadow-2xl">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                  <Video className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Your Content</h3>
-                  <p className="text-sm text-gray-400">{videos.length} items created</p>
-                </div>
+                <button className="p-2 rounded-md bg-slate-800/40 hover:bg-slate-800/60">
+                  <Plus className="w-4 h-4 text-slate-200" />
+                </button>
               </div>
 
-              {loadingVideos ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-2 border-weaveit-500 border-t-transparent mx-auto mb-4"></div>
-                  <p className="text-gray-400">Loading your content...</p>
-                </div>
-              ) : videos.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-gray-700/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Video className="w-10 h-10 text-gray-500" />
-                  </div>
-                  <p className="text-gray-400 mb-2">No content yet</p>
-                  <p className="text-sm text-gray-500">Create your first tutorial to get started!</p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-                  {videos.map((video) => (
-                    <div
-                      key={video.id}
-                      className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/30 hover:border-weaveit-500/30 transition-all duration-200 cursor-pointer hover:transform hover:scale-[1.02] backdrop-blur-sm group"
-                      onClick={() => setCurrentVideo({ url: video.url, title: video.title })}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-weaveit-500/20 rounded-lg flex items-center justify-center group-hover:bg-weaveit-500/30 transition-colors">
-                          <Play className="w-5 h-5 text-weaveit-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-white text-sm truncate">
-                            {video.title || "Untitled Video"}
-                          </h4>
-                          <p className="text-xs text-gray-400">{new Date(video.createdAt).toLocaleDateString()}</p>
-                        </div>
-                      </div>
+              <div className="space-y-3">
+                <button onClick={handleUploadClick} className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-800 hover:bg-slate-800/60">
+                  <span className="flex items-center space-x-2"><Upload className="w-4 h-4 text-slate-200"/><span className="text-sm">Upload documents</span></span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+
+                <button onClick={handleImportRepo} className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-800 hover:bg-slate-800/60">
+                  <span className="flex items-center space-x-2"><Code className="w-4 h-4 text-slate-200"/><span className="text-sm">Import repository</span></span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+
+                <div className="mt-4 text-xs text-slate-500">Your Content</div>
+                <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
+                  {loadingVideos ? (
+                    <div className="text-center py-6">
+                      <div className="animate-spin h-8 w-8 rounded-full border-2 border-violet-500 border-t-transparent mx-auto mb-3"></div>
+                      <div className="text-xs text-slate-400">Loading...</div>
                     </div>
-                  ))}
+                  ) : videos.length === 0 ? (
+                    <div className="text-xs text-slate-500 py-6 text-center">No content yet</div>
+                  ) : (
+                    videos.map((v) => (
+                      <div key={v.id} className="p-2 rounded-md hover:bg-slate-800/40 cursor-pointer" onClick={() => setCurrentVideo({ url: v.url, title: v.title })}>
+                        <div className="text-sm font-medium truncate">{v.title || 'Untitled'}</div>
+                        <div className="text-xs text-slate-500">{new Date(v.createdAt).toLocaleDateString()}</div>
+                      </div>
+                    ))
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          </aside>
+
+          {/* Center: Chat / Script / Studio */}
+          <section className="col-span-12 lg:col-span-6">
+            <div className="bg-slate-900/40 rounded-2xl border border-slate-800 p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold">Studio</h2>
+                  <p className="text-sm text-slate-400">Chat in the center, create in the studio</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button className="px-3 py-1 rounded-md bg-violet-600/90 text-sm">New</button>
+                  <button className="px-3 py-1 rounded-md bg-slate-800/40 text-sm">History</button>
+                </div>
+              </div>
+
+              {/* Chat / ScriptForm */}
+              <div className="space-y-4">
+                <ScriptForm
+                  onVideoGenerated={handleVideoGenerated}
+                  generationType={generationType}
+                  setGenerationType={setGenerationType}
+                  videosLength={videos.length}
+                  hasCurrentVideo={!!currentVideo}
+                  onImportRepo={handleImportRepo}
+                  onUploadClick={handleUploadClick}
+                />
+
+                {currentVideo && (
+                  <div className="mt-2">
+                    <VideoDisplay videoUrl={currentVideo.url} title={currentVideo.title} onClose={() => setCurrentVideo(null)} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Right: Tools / Studio Cards */}
+          <aside className="col-span-12 lg:col-span-3">
+            <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-4 sticky top-24 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-semibold">Studio</h4>
+                  <div className="text-xs text-slate-500">Tools & integrations</div>
+                </div>
+                <button className="p-2 rounded-md bg-slate-800/40 hover:bg-slate-800/60"><Plus className="w-4 h-4"/></button>
+              </div>
+
+              <div className="space-y-3">
+                {/* Generation Type moved here from ScriptForm */}
+                <div className="p-3 rounded-lg bg-slate-800/30 border border-slate-800">
+                  <div className="mb-2">
+                    <div className="text-sm font-medium">Generation Type</div>
+                    <div className="text-xs text-slate-500">Choose Full Video or Audio Only</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setGenerationType("video")}
+                      className={`relative overflow-hidden py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center space-x-2 ${
+                        generationType === "video"
+                          ? "bg-gradient-to-r from-violet-600 to-indigo-500 text-white shadow-lg shadow-violet-600/30"
+                          : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50"
+                      }`}
+                    >
+                      <Video className="w-4 h-4" />
+                      <span className="text-sm">Full Video</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setGenerationType("audio")}
+                      className={`relative overflow-hidden py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center space-x-2 ${
+                        generationType === "audio"
+                          ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30"
+                          : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50"
+                      }`}
+                    >
+                      <Music className="w-4 h-4" />
+                      <span className="text-sm">Audio Only</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
-      </div>
+      </main>
     </div>
+  )
+}
+
+function StudioCard({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <button className="flex flex-col items-center gap-3 p-4 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition group">
+      <div className="text-slate-400 group-hover:text-slate-300 transition">{icon}</div>
+      <span className="text-xs font-medium text-slate-300">{label}</span>
+    </button>
   )
 }
