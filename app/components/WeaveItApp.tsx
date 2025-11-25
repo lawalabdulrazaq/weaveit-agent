@@ -4,7 +4,6 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useWallet, useConnection } from "@solana/wallet-adapter-react"
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"
-import { useSolanaPayment } from "../../hooks/use-solana-payment"
 import {
   Download,
   Play,
@@ -40,7 +39,7 @@ import {
   Code,
   ChevronRight,
 } from "lucide-react"
-import { purchaseWithUsdc, TIERS, CREDITS, USE_TOKEN_2022 } from "../../lib/payments"
+// backend helpers imported dynamically inside the effect to avoid static resolution issues
 
 // Enhanced Video Display Component
 interface VideoDisplayProps {
@@ -309,6 +308,8 @@ interface ScriptFormProps {
   hasCurrentVideo?: boolean
   onImportRepo?: () => void
   onUploadClick?: () => void
+  onCreditsUpdate?: (credits: number) => void
+  currentPoints?: number | null
 }
 
 const ScriptForm: React.FC<ScriptFormProps> = ({
@@ -319,6 +320,8 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
   hasCurrentVideo = false,
   onImportRepo,
   onUploadClick,
+  onCreditsUpdate,
+  currentPoints,
 }) => {
   const [script, setScript] = useState("")
   const [title, setTitle] = useState("")
@@ -326,12 +329,8 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loadingStep, setLoadingStep] = useState("")
-  const [paymentProcessing, setPaymentProcessing] = useState(false)
-  const [selectedTier, setSelectedTier] = useState<keyof typeof TIERS>("tier5")
   const wallet = useWallet()
   const { connection } = useConnection()
-
-  const { sendPayment, getSolPrice, isProcessing } = useSolanaPayment()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -350,33 +349,12 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
     setError("")
     setSuccess("")
 
-      try {
-      // Process USDC payment based on selected tier and generation type
-      setLoadingStep("Processing payment...")
-      setPaymentProcessing(true)
-
+    try {
       if (!wallet || !wallet.publicKey) {
         throw new Error("Wallet not connected")
       }
 
-      const credits = generationType === "video" ? CREDITS.video : CREDITS.audio
-      const amountUSD = (TIERS as any)[selectedTier] * credits
-
-      let paymentSignature: string | null = null
-      try {
-        paymentSignature = await purchaseWithUsdc(wallet, amountUSD, connection, { useToken2022: USE_TOKEN_2022 })
-        console.log("Token payment signature:", paymentSignature)
-      } catch (payErr) {
-        console.error("Payment failed:", payErr)
-        setError((payErr as any)?.message || "Payment failed or was rejected")
-        setLoading(false)
-        setLoadingStep("")
-        setPaymentProcessing(false)
-        return
-      }
-
-      setPaymentProcessing(false)
-      setLoadingStep("Payment confirmed! Generating video...")
+      setLoadingStep("Generating " + generationType + "...")
 
       const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
 
@@ -391,19 +369,33 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
         body: JSON.stringify({
           script,
           title,
-          transactionSignature: paymentSignature || "TOKEN_PAYMENT",
           walletAddress: wallet.publicKey?.toBase58(),
         }),
       })
 
+      // Handle insufficient credits (402 Payment Required)
+      if (response.status === 402) {
+        const errorData = await response.json().catch(() => ({}))
+        const required = errorData.required || (generationType === "video" ? 2 : 1)
+        setError(`Insufficient credits. You need ${required} credits to generate ${generationType}. Current balance: ${currentPoints || 0}`)
+        setLoading(false)
+        setLoadingStep("")
+        return
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         console.error("Backend error:", errorData)
-        throw new Error(errorData.error || "Failed to start video generation")
+        throw new Error(errorData.error || `Failed to start ${generationType} generation`)
       }
 
       const videoData = await response.json()
       console.log("Generation response:", videoData)
+
+      // Update remaining credits if provided by backend
+      if (videoData.remainingCredits !== undefined && onCreditsUpdate) {
+        onCreditsUpdate(videoData.remainingCredits)
+      }
 
       // Construct URL based on generation type and response data
       let contentUrl: string | null = null
@@ -443,7 +435,6 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
     } finally {
       setLoading(false)
       setLoadingStep("")
-      setPaymentProcessing(false)
     }
   }
 
@@ -618,21 +609,21 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
       {/* Generation Button */}
       <button
         type="submit"
-        disabled={loading || !script.trim() || !title.trim() || isProcessing}
-        className={`relative overflow-hidden w-full py-4 px-6 rounded-xl font-semibold text-base flex items-center justify-center space-x-3 ${loading || isProcessing ? "bg-gray-700/50 cursor-not-allowed" : generationType === "video" ? "bg-gradient-to-r from-violet-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600" : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"} text-white shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 border ${generationType === "video" ? "border-violet-600/20" : "border-purple-500/20"}`}
+        disabled={loading || !script.trim() || !title.trim()}
+        className={`relative overflow-hidden w-full py-4 px-6 rounded-xl font-semibold text-base flex items-center justify-center space-x-3 ${loading ? "bg-gray-700/50 cursor-not-allowed" : generationType === "video" ? "bg-gradient-to-r from-violet-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600" : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"} text-white shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 border ${generationType === "video" ? "border-violet-600/20" : "border-purple-500/20"}`}
       >
-        {loading || paymentProcessing ? (
+        {loading ? (
           <div className="flex flex-col items-center space-y-2">
             <div className="flex items-center space-x-3">
               <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
-              <span>{paymentProcessing ? "Processing Payment..." : `Generating Your ${generationType === "video" ? "Video" : "Audio"}...`}</span>
+              <span>Generating Your {generationType === "video" ? "Video" : "Audio"}...</span>
             </div>
             {loadingStep && <span className="text-sm text-violet-200">{loadingStep}</span>}
           </div>
         ) : (
           <>
             <Zap className="w-6 h-6" />
-            <span>Generate {generationType === "video" ? "Tutorial Video" : "Audio Narration"} (FREE - Testing Mode)</span>
+            <span>Generate {generationType === "video" ? "Tutorial Video" : "Audio Narration"} ({generationType === "video" ? "2" : "1"} credits)</span>
             <ArrowRight className="w-6 h-6" />
           </>
         )}
@@ -706,7 +697,15 @@ const WalletConnect: React.FC<{ onConnect: () => void }> = ({ onConnect }) => {
       )}
 
       <div className="flex justify-center">
-        <WalletMultiButton className="!bg-gradient-to-r !from-violet-600 !to-indigo-500 hover:!from-indigo-500 hover:!to-indigo-600 !rounded-xl !font-semibold !py-3 !px-6 !text-base !transition-all !duration-200 !transform hover:!scale-105" />
+        <WalletMultiButton style={{
+          background: "linear-gradient(to right, rgb(124, 58, 202), rgb(79, 70, 229))",
+          borderRadius: "0.75rem",
+          fontWeight: "600",
+          padding: "0.75rem 1.5rem",
+          fontSize: "1rem",
+          transition: "all 200ms",
+          transform: "scale(1)",
+        }} />
       </div>
 
       {/* Security Features */}
@@ -741,6 +740,8 @@ export default function WeaveItApp() {
   const [currentVideo, setCurrentVideo] = useState<{ url: string; title: string } | null>(null)
   const [videos, setVideos] = useState<Array<{ id: string; title: string; url: string; createdAt: string }>>([])
   const [loadingVideos, setLoadingVideos] = useState(false)
+  const [points, setPoints] = useState<number | null>(null)
+  const [trialExpiresAt, setTrialExpiresAt] = useState<string | null>(null)
   const [generationType, setGenerationType] = useState<"video" | "audio">("video")
 
   // Fetch user's videos and audio when wallet connects
@@ -748,35 +749,51 @@ export default function WeaveItApp() {
     const fetchUserContent = async () => {
       if (!connected || !publicKey) {
         setVideos([])
+        setPoints(null)
+        setTrialExpiresAt(null)
         return
       }
 
       setLoadingVideos(true)
       try {
-        const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
         const walletAddress = publicKey.toBase58()
-        
-        // Fetch all content (videos and audio) from unified endpoint
-        const response = await fetch(`${backendBaseUrl}/api/wallet/${walletAddress}/content`)
 
-        if (!response.ok) {
-          console.error("Failed to fetch content:", response.statusText)
-          return
+        // Fetch content from centralized lib helper
+        try {
+          // @ts-ignore - dynamic import of local lib helper
+          const backendModule = await import("../../lib/backend")
+          const data = await backendModule.fetchUserContent(walletAddress)
+          console.log("Fetched content:", data)
+
+          const backendBaseUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001").replace(/\/$/, "")
+
+          // Transform backend response to match our content format
+          const fetchedContent = (data?.content || []).map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            url: `${backendBaseUrl}${item.url}`,
+            createdAt: item.created_at,
+            contentType: item.content_type,
+          }))
+
+          console.log("Transformed content:", fetchedContent)
+          setVideos(fetchedContent)
+
+          // Fetch points using centralized helper from same module
+          try {
+            const pointsData = await backendModule.fetchUserPoints(walletAddress)
+            setPoints(typeof pointsData.points === 'number' ? pointsData.points : null)
+            setTrialExpiresAt(pointsData.trial_expires_at || pointsData.trialExpiresAt || null)
+          } catch (err) {
+            console.debug('Failed to fetch points:', err)
+            setPoints(null)
+            setTrialExpiresAt(null)
+          }
+        } catch (err) {
+          console.error("Failed to fetch content:", err)
+          // Don't clear videos on error - user may have had content loaded before
+          // Only set to empty if this is the initial load
         }
-
-        const data = await response.json()
-        console.log("Fetched content:", data)
-
-        // Transform backend response to match our content format
-        const fetchedContent = data.content.map((item: any) => ({
-          id: item.id,
-          title: item.title || `${item.content_type === 'video' ? 'Video' : 'Audio'} ${item.id.slice(0, 8)}`,
-          url: `${backendBaseUrl}${item.url}`,
-          createdAt: item.created_at,
-          contentType: item.content_type,
-        }))
-
-        setVideos(fetchedContent)
       } catch (error) {
         console.error("Error fetching content:", error)
       } finally {
@@ -930,6 +947,12 @@ export default function WeaveItApp() {
               <div className="text-sm text-slate-300 text-right">
                 <div className="font-medium">{publicKey ? publicKey.toString().slice(0, 6) + '...' + publicKey.toString().slice(-4) : 'Not connected'}</div>
                 <div className="text-xs text-slate-500">Wallet</div>
+                <div className="text-xs text-slate-300 mt-1">
+                  Credits: {points === null ? "—" : points}
+                  {trialExpiresAt ? (
+                    <span className="text-xs text-slate-400 block">Trial expires: {new Date(trialExpiresAt).toLocaleString()}</span>
+                  ) : null}
+                </div>
               </div>
 
               <button
@@ -1017,6 +1040,8 @@ export default function WeaveItApp() {
                   hasCurrentVideo={!!currentVideo}
                   onImportRepo={handleImportRepo}
                   onUploadClick={handleUploadClick}
+                  onCreditsUpdate={setPoints}
+                  currentPoints={points}
                 />
 
                 {currentVideo && (

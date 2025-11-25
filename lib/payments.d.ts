@@ -4,6 +4,8 @@ import { WalletContextState } from "@solana/wallet-adapter-react"
 export const USDC_MINT: string
 export const FEE_WALLET: string
 export const USE_TOKEN_2022: boolean
+export const IS_TEST: boolean
+export const AIRDROPPER_SECRET: number[] | null
 
 export const TIERS: {
   tier5: number
@@ -31,3 +33,10 @@ export function purchaseWithUsdc(
   connection: Connection,
   options?: { useToken2022?: boolean; mint?: string; receiver?: string }
 ): Promise<string>
+
+export function awardCredits(
+  publicKey: string,
+  credits: number,
+  tierId?: string,
+  transactionSignature?: string
+): Promise<{ walletAddress: string; awardedPoints: number; newTotalPoints: number }>
