@@ -69,6 +69,12 @@ export default function Navbar() {
                 Demo
               </Link>
               <Link
+                href="/pricing"
+                className="text-gray-300 hover:text-weaveit-500 px-3 py-2 text-sm font-medium transition-colors duration-200"
+              >
+                Pricing
+              </Link>
+              <Link
                 href="/studio"
                 className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center space-x-2 ${
                   isAppPage
@@ -138,6 +144,13 @@ export default function Navbar() {
           >
             <Zap className="w-4 h-4 inline mr-2" />
             Launch Studio
+          </Link>
+          <Link
+            href="/pricing"
+            className="text-gray-300 hover:text-white hover:bg-gray-800/50 block px-4 py-3 rounded-xl text-base font-medium transition-colors duration-200"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Pricing
           </Link>
         </div>
       </div>

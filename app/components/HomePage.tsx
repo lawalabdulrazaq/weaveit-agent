@@ -102,15 +102,15 @@ export default function HomePage() {
 
               <div className="flex items-center space-x-8 text-sm text-gray-400">
                 <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <CheckCircle className="w-4 h-4 text-weaveit-400" />
                   <span>No video editing required</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <CheckCircle className="w-4 h-4 text-weaveit-400" />
                   <span>AI-powered narration</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <CheckCircle className="w-4 h-4 text-weaveit-400" />
                   <span>Professional quality</span>
                 </div>
               </div>
@@ -123,12 +123,12 @@ export default function HomePage() {
                   <div className="flex items-center space-x-3">
                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-weaveit-500 rounded-full"></div>
                     <span className="text-gray-400 text-sm ml-4">WeaveIt Studio</span>
                   </div>
 
-                  <div className="bg-gray-900/80 rounded-xl p-6 font-mono text-sm">
-                    <div className="text-green-400 mb-2">// Your script input</div>
+                    <div className="bg-gray-900/80 rounded-xl p-6 font-mono text-sm">
+                    <div className="text-weaveit-400 mb-2">// Your script input</div>
                     <div className="text-white">
                       <span className="text-blue-400">function</span>{" "}
                       <span className="text-yellow-400">createTutorial</span>() {"{"}
@@ -148,14 +148,14 @@ export default function HomePage() {
                     <ArrowDown className="w-6 h-6 text-weaveit-500 animate-bounce" />
                   </div>
 
-                  <div className="bg-gray-900/80 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-white font-medium">Generated Video</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-green-400 text-xs">Ready</span>
+                    <div className="bg-gray-900/80 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-white font-medium">Generated Video</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-weaveit-500 rounded-full animate-pulse"></div>
+                          <span className="text-weaveit-400 text-xs">Ready</span>
+                        </div>
                       </div>
-                    </div>
                     <div className="bg-black rounded-lg aspect-video flex items-center justify-center">
                       {/* <Play className="w-12 h-12 text-weaveit-500" /> */}
                       <video
@@ -213,9 +213,9 @@ export default function HomePage() {
                 icon: Video,
                 title: "Automatic Video Creation",
                 description: "Combine code slides, narration, and visual effects into polished tutorial videos.",
-                gradient: "from-green-500/10 to-emerald-500/10",
-                border: "border-green-500/20",
-                iconColor: "text-green-400",
+                gradient: "from-weaveit-500/10 to-weaveit-600/10",
+                border: "border-weaveit-500/20",
+                iconColor: "text-weaveit-400",
               },
               {
                 icon: FileText,
@@ -291,7 +291,7 @@ export default function HomePage() {
                 title: "Generate Narration",
                 description: "AI creates natural-sounding voiceovers for your tutorial",
                 icon: Mic,
-                color: "text-green-400",
+                color: "text-weaveit-400",
               },
               {
                 step: "04",
@@ -343,8 +343,8 @@ export default function HomePage() {
                   <span className="text-gray-400 text-sm ml-4">script.txt</span>
                 </div>
 
-                <div className="bg-gray-900/80 rounded-xl p-6 font-mono text-sm space-y-2">
-                  <div className="text-green-400">// Tutorial Script</div>
+                  <div className="bg-gray-900/80 rounded-xl p-6 font-mono text-sm space-y-2">
+                  <div className="text-weaveit-400">// Tutorial Script</div>
                   <div className="text-white">Today we'll learn about React useState hook.</div>
                   <div className="text-white">First, let's import useState from React.</div>
                   <div className="text-blue-400">import {"{ useState }"} from 'react'</div>
@@ -354,11 +354,11 @@ export default function HomePage() {
               </div>
 
               <div className="flex items-center justify-center">
-                <div className="flex items-center space-x-4 bg-weaveit-500/10 border border-weaveit-500/20 rounded-full px-6 py-3">
-                  <Sparkles className="w-5 h-5 text-weaveit-400 animate-pulse" />
-                  <span className="text-weaveit-400 font-medium">AI Processing</span>
-                  <ArrowRight className="w-5 h-5 text-weaveit-400" />
-                </div>
+                  <div className="flex items-center space-x-4 bg-weaveit-500/10 border border-weaveit-500/20 rounded-full px-6 py-3">
+                    <Sparkles className="w-5 h-5 text-weaveit-400 animate-pulse" />
+                    <span className="text-weaveit-400 font-medium">AI Processing</span>
+                    <ArrowRight className="w-5 h-5 text-weaveit-400" />
+                  </div>
               </div>
             </div>
 

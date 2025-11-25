@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { useWallet } from "@solana/wallet-adapter-react"
+import { useWallet, useConnection } from "@solana/wallet-adapter-react"
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"
 import { useSolanaPayment } from "../../hooks/use-solana-payment"
 import {
@@ -40,6 +40,7 @@ import {
   Code,
   ChevronRight,
 } from "lucide-react"
+import { purchaseWithUsdc, TIERS, CREDITS, USE_TOKEN_2022 } from "../../lib/payments"
 
 // Enhanced Video Display Component
 interface VideoDisplayProps {
@@ -326,7 +327,9 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
   const [success, setSuccess] = useState("")
   const [loadingStep, setLoadingStep] = useState("")
   const [paymentProcessing, setPaymentProcessing] = useState(false)
-  const { publicKey } = useWallet()
+  const [selectedTier, setSelectedTier] = useState<keyof typeof TIERS>("tier5")
+  const wallet = useWallet()
+  const { connection } = useConnection()
 
   const { sendPayment, getSolPrice, isProcessing } = useSolanaPayment()
 
@@ -347,33 +350,33 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
     setError("")
     setSuccess("")
 
-    try {
-      // PAYMENT TEMPORARILY DISABLED FOR TESTING
-      // Uncomment the block below to re-enable payment
-      /*
+      try {
+      // Process USDC payment based on selected tier and generation type
       setLoadingStep("Processing payment...")
       setPaymentProcessing(true)
 
-      const paymentResult = await sendPayment(0.5) // $0.50 in SOL
-      console.log("Payment completed:", paymentResult)
+      if (!wallet || !wallet.publicKey) {
+        throw new Error("Wallet not connected")
+      }
 
-      setPaymentProcessing(false)
+      const credits = generationType === "video" ? CREDITS.video : CREDITS.audio
+      const amountUSD = (TIERS as any)[selectedTier] * credits
 
-      //check fee payment result
-      if (!paymentResult || !paymentResult.success) {
-        console.warn("Payment not successful, aborting generation", paymentResult)
-        setError(paymentResult?.error || "Payment failed or was rejected")
+      let paymentSignature: string | null = null
+      try {
+        paymentSignature = await purchaseWithUsdc(wallet, amountUSD, connection, { useToken2022: USE_TOKEN_2022 })
+        console.log("Token payment signature:", paymentSignature)
+      } catch (payErr) {
+        console.error("Payment failed:", payErr)
+        setError((payErr as any)?.message || "Payment failed or was rejected")
         setLoading(false)
         setLoadingStep("")
         setPaymentProcessing(false)
         return
       }
 
+      setPaymentProcessing(false)
       setLoadingStep("Payment confirmed! Generating video...")
-      */
-
-      // Skip payment for testing
-      setLoadingStep("Generating video...")
 
       const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
 
@@ -388,8 +391,8 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
         body: JSON.stringify({
           script,
           title,
-          transactionSignature: "TEST_MODE", // paymentResult.signature when payment is enabled
-          walletAddress: publicKey?.toBase58(),
+          transactionSignature: paymentSignature || "TOKEN_PAYMENT",
+          walletAddress: wallet.publicKey?.toBase58(),
         }),
       })
 
@@ -649,24 +652,6 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
           <span className="text-violet-400">{success}</span>
         </div>
       )}
-
-      {/* Cost Information */}
-      <div className="bg-gradient-to-r from-violet-600/10 to-indigo-500/10 border border-violet-600/30 rounded-xl p-6 backdrop-blur-sm">
-        <div className="flex items-center space-x-3 mb-3">
-          <div className="w-10 h-10 bg-violet-600/20 rounded-xl flex items-center justify-center">
-            <DollarSign className="w-5 h-5 text-violet-300" />
-          </div>
-          <div>
-            <h4 className="font-semibold text-white">Generation Cost</h4>
-            <p className="text-sm text-gray-400">Transparent pricing</p>
-          </div>
-        </div>
-        <p className="text-sm text-gray-300 mb-2">
-          Video generation requires a payment of <strong className="text-violet-300">$0.50</strong> in SOL to cover AI
-          processing costs.
-        </p>
-        <p className="text-xs text-gray-400">💡 Payment is processed securely through your connected Solana wallet</p>
-      </div>
 
       {/* Tips Section */}
       <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700/30 backdrop-blur-sm">
