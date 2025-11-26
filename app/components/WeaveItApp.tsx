@@ -783,7 +783,7 @@ export default function WeaveItApp() {
           try {
             const pointsData = await backendModule.fetchUserPoints(walletAddress)
             setPoints(typeof pointsData.points === 'number' ? pointsData.points : null)
-            setTrialExpiresAt(pointsData.trial_expires_at || pointsData.trialExpiresAt || null)
+            setTrialExpiresAt(pointsData.trial_expires_at || null)
           } catch (err) {
             console.debug('Failed to fetch points:', err)
             setPoints(null)
