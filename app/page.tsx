@@ -1,4 +1,4 @@
-'use client'
+import HomePage from "./components/HomePage"
 
 import { useState } from 'react'
 import Link from 'next/link'

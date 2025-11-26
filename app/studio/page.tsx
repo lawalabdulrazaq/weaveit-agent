@@ -1,4 +1,4 @@
-import AppPage from "../../src/pages/AppPage"
+import AppPage from "../components/AppPage"
 
 export default function Page() {
   return <AppPage />

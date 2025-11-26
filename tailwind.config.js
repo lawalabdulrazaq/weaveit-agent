@@ -39,17 +39,17 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))",
         },
         'weaveit': {
-          50: '#eaffea',
-          100: '#d0ffd0',
-          200: '#a0ffa0',
-          300: '#70ff70',
-          400: '#40ff40',
-          500: '#00ff00', // Brand green
-          600: '#00cc00',
-          700: '#009900',
-          800: '#007700',
-          900: '#005500',
-          950: '#003300',
+          50: '#f5f3ff',
+          100: '#ede9fe',
+          200: '#ddd6fe',
+          300: '#c4b5fd',
+          400: '#a78bfa',
+          500: '#7c3aed', // Brand violet
+          600: '#6d28d9',
+          700: '#5b21b6',
+          800: '#4c1d95',
+          900: '#3b0764',
+          950: '#2a0140',
         },
       borderRadius: {
         lg: "var(--radius)",
