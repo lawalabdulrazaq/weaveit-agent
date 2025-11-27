@@ -19,7 +19,7 @@ Steps (server)
 3. Replace direct Anthropic calls with the helper `lib/anthropic.ts` or call the env var directly so the server always uses the enforced model.
 
 Example (Node/Express)
-```js
+\`\`\`js
 import { callAnthropic } from './lib/anthropic'
 
 app.post('/api/generate', async (req,res) => {
@@ -31,7 +31,7 @@ app.post('/api/generate', async (req,res) => {
     res.status(500).json({ error: String(err) })
   }
 })
-```
+\`\`\`
 
 Important notes
 - Keep API keys server-side only.

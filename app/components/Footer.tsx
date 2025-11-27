@@ -1,221 +1,186 @@
-import { Github, Twitter, Mail, FileText, Users, MessageCircle } from "lucide-react"
+"use client"
 
-export default function Footer() {
+import Link from "next/link"
+import { Github, Twitter, Linkedin, Youtube, FileText, Users, MessageCircle, BookOpen, Code2 } from "lucide-react"
+
+export function Footer() {
+  const currentYear = new Date().getFullYear()
+
   return (
-    <footer className="bg-[#0a0e17] border-t border-gray-800/50">
+    <footer className="bg-card border-t border-border">
       <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:py-20 lg:px-8">
-        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
           {/* Brand Section */}
-          <div className="space-y-8 xl:col-span-1">
-            <div className="flex items-center space-x-3">
-              <img className="h-10 w-10 rounded-xl" src="/assets/weav12.jpg" alt="WeaveIt" />
-              <div>
-                <h3 className="text-xl font-bold bg-gradient-to-r from-weaveit-500 to-weaveit-600 bg-clip-text text-transparent">
-                  WeaveIt
-                </h3>
-                <p className="text-xs text-gray-400">AI Video Generator</p>
+          <div className="lg:col-span-1 space-y-6">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                <span className="font-bold text-primary-foreground text-xl">W</span>
               </div>
-            </div>
-            <p className="text-gray-300 text-base leading-relaxed max-w-md">
+              <div>
+                <span className="font-bold text-xl text-foreground">WeaveIt</span>
+                <p className="text-xs text-muted-foreground">AI Video Generator</p>
+              </div>
+            </Link>
+            <p className="text-muted-foreground leading-relaxed">
               Transform your code explanations into professional tutorial videos with AI-powered narration and visual
               generation.
             </p>
-            <div className="flex space-x-6">
+            <div className="flex items-center gap-4">
               <a
                 href="https://x.com/weaveItAgent"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
+                className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                aria-label="X (Twitter)"
               >
-                <span className="sr-only">X (Twitter)</span>
-                <Twitter className="h-6 w-6" />
+                <Twitter className="w-5 h-5" />
               </a>
               <a
                 href="https://github.com/lawalabdulrazaq/weaveit-agent"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
+                className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                aria-label="GitHub"
               >
-                <span className="sr-only">GitHub</span>
-                <Github className="h-6 w-6" />
+                <Github className="w-5 h-5" />
               </a>
               <a
-                href="mailto:weaveitagent@gmail.com"
-                className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
+                href="https://youtube.com/@weaveit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                aria-label="YouTube"
               >
-                <span className="sr-only">Email</span>
-                <Mail className="h-6 w-6" />
+                <Youtube className="w-5 h-5" />
+              </a>
+              <a
+                href="https://linkedin.com/company/weaveit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="w-5 h-5" />
               </a>
             </div>
           </div>
 
-          {/* Links Section */}
-          <div className="mt-12 grid grid-cols-2 gap-8 xl:mt-0 xl:col-span-2">
-            <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <h3 className="text-sm font-semibold text-weaveit-500 tracking-wider uppercase mb-4">Product</h3>
-                <ul className="space-y-3">
-                  <li>
-                    <a
-                      href="#features"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
-                    >
-                      Features
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#how-it-works"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
-                    >
-                      How It Works
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/studio"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
-                    >
-                      Launch Studio
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#demo"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
-                    >
-                      Demo
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold text-weaveit-500 tracking-wider uppercase mb-4">Resources</h3>
-                <ul className="space-y-3">
-                  <li>
-                    <a
-                      href="https://docs.weaveit.ai"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200 flex items-center"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Documentation
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="https://github.com/weaveit-ai/examples"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
-                    >
-                      Examples
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-            <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <h3 className="text-sm font-semibold text-weaveit-500 tracking-wider uppercase mb-4">Company</h3>
-                <ul className="space-y-3">
-                  <li>
-                    <a
-                      href="/about"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200 flex items-center"
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      About
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="mailto:temitopelawal925@gmail.com"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200 flex items-center"
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Contact
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div className="mt-12 md:mt-0">
-                <h3 className="text-sm font-semibold text-weaveit-500 tracking-wider uppercase mb-4">Legal</h3>
-                <ul className="space-y-3">
-                  <li>
-                    <a
-                      href="/privacy"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
-                    >
-                      Privacy Policy
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/terms"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
-                    >
-                      Terms of Service
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/cookies"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
-                    >
-                      Cookie Policy
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
+          {/* Product Links */}
+          <div>
+            <h3 className="text-sm font-semibold text-primary tracking-wider uppercase mb-6">Product</h3>
+            <ul className="space-y-4">
+              {[
+                { label: "Features", href: "#features" },
+                { label: "Pricing", href: "#pricing" },
+                { label: "Reviews", href: "#reviews" },
+                { label: "FAQ", href: "#faq" },
+                { label: "Launch Studio", href: "/studio" },
+              ].map((link) => (
+                <li key={link.label}>
+                  <a href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Resources Links */}
+          <div>
+            <h3 className="text-sm font-semibold text-primary tracking-wider uppercase mb-6">Resources</h3>
+            <ul className="space-y-4">
+              {[
+                { label: "Documentation", href: "https://docs.weaveit.ai", icon: FileText },
+                { label: "API Reference", href: "/api-docs", icon: Code2 },
+                { label: "Tutorials", href: "/tutorials", icon: BookOpen },
+                { label: "Examples", href: "https://github.com/weaveit-ai/examples", icon: null },
+                { label: "Blog", href: "/blog", icon: null },
+              ].map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    target={link.href.startsWith("http") ? "_blank" : undefined}
+                    rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                    className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+                  >
+                    {link.icon && <link.icon className="w-4 h-4" />}
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company & Legal Links */}
+          <div>
+            <h3 className="text-sm font-semibold text-primary tracking-wider uppercase mb-6">Company</h3>
+            <ul className="space-y-4">
+              {[
+                { label: "About Us", href: "/about", icon: Users },
+                { label: "Contact", href: "mailto:weaveitagent@gmail.com", icon: MessageCircle },
+                { label: "Privacy Policy", href: "/privacy", icon: null },
+                { label: "Terms of Service", href: "/terms", icon: null },
+                { label: "Cookie Policy", href: "/cookies", icon: null },
+              ].map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+                  >
+                    {link.icon && <link.icon className="w-4 h-4" />}
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="mt-12 pt-8 border-t border-gray-800/50">
-          <div className="md:flex md:items-center md:justify-between">
-            <div className="flex space-x-6 md:order-2">
-              <a
-                href="https://x.com/weaveItAgent"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
-              >
-                <span className="sr-only">X (Twitter)</span>
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a
-                href="https://github.com/lawalabdulrazaq/weaveit-agent"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
-              >
-                <span className="sr-only">GitHub</span>
-                <Github className="h-5 w-5" />
-              </a>
-              <a
-                href="mailto:weaveitagent@gmail.com"
-                className="text-gray-400 hover:text-weaveit-500 transition-colors duration-200"
-              >
-                <span className="sr-only">Email</span>
-                <Mail className="h-5 w-5" />
-              </a>
+        {/* Newsletter */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Stay updated</h3>
+              <p className="text-muted-foreground">Get the latest news, tutorials, and product updates.</p>
             </div>
-            <div className="mt-8 md:mt-0 md:order-1">
-              <p className="text-base text-gray-400">&copy; 2025 WeaveIt AI, Inc. All rights reserved.</p>
-            </div>
+            <form className="flex gap-3">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 px-4 py-3 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <button type="submit" className="btn-primary whitespace-nowrap">
+                Subscribe
+              </button>
+            </form>
           </div>
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-8 pt-6 border-t border-gray-800/30">
-          <div className="text-center">
-            <p className="text-sm text-gray-500">Built with ❤️ for developers and content creators worldwide</p>
+        {/* Bottom Bar */}
+        <div className="mt-12 pt-8 border-t border-border">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-muted-foreground text-sm">&copy; {currentYear} WeaveIt AI, Inc. All rights reserved.</p>
+            <div className="flex items-center gap-6">
+              <a href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Privacy
+              </a>
+              <a href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Terms
+              </a>
+              <a href="/cookies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Cookies
+              </a>
+            </div>
+          </div>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Built with care for developers and content creators worldwide
+            </p>
           </div>
         </div>
       </div>
     </footer>
   )
 }
+
+export default Footer

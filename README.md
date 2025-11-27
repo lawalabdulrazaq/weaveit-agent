@@ -4,7 +4,7 @@ AI-powered video generator that transforms code tutorials into professional vide
 
 ## Architecture
 
-```
+\`\`\`
 app/
 ├── components/          # React components
 │   ├── HomePage.tsx    # Landing page
@@ -25,7 +25,7 @@ weaveit/weaveit-generator/
 
 components/
 └── wallet-provider.tsx # Solana wallet integration
-```
+\`\`\`
 
 ## Tech Stack
 

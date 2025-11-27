@@ -22,15 +22,15 @@ Frontend integration guide
     - `POST /api/payments/award`
     - Body JSON (examples):
       - By tier:
-        ```json
+        \`\`\`json
         { "walletAddress": "0xabc...", "tier": 5 }
-        ```
+        \`\`\`
       - By explicit points (useful for webhooks or custom promo credits):
-        ```json
+        \`\`\`json
         { "walletAddress": "0xabc...", "points": 150 }
-        ```
+        \`\`\`
   - The response contains the awarded points and the user's new total points:
-    ```json
+    \`\`\`json
     {
       "walletAddress": "0xabc...",
       "awardedPoints": 30,
@@ -38,7 +38,7 @@ Frontend integration guide
       "contentType": null,
       "contentCredits": null
     }
-    ```
+    \`\`\`
 
 - Trial handling (new users)
 
@@ -58,13 +58,13 @@ Frontend integration guide
     - `GET /api/users/:walletAddress/points`
     - Returns `{ walletAddress, points, trial_expires_at }` and automatically enforces trial expiry before returning the balance.
     - Example:
-      ```json
+      \`\`\`json
       {
         "walletAddress": "0xabc...",
         "points": 12,
         "trial_expires_at": "2025-11-29T12:34:56.000Z"
       }
-      ```
+      \`\`\`
   - `POST /api/payments/award` still returns the latest total after awarding credits.
 
 Security and best practices

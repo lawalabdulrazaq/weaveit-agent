@@ -1,17 +1,29 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import './globals.css'
+import type React from "react"
+import type { Metadata } from "next"
+import { Geist, Geist_Mono } from "next/font/google"
+import "./globals.css"
 
-const geist = Geist({ subsets: ["latin"], variable: '--font-sans' })
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: '--font-mono' })
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
 export const metadata: Metadata = {
-  title: 'WeaveIt - AI Video Tutorial Generator',
-  description: 'Generate professional video tutorials instantly with AI. For developers, by developers.',
-  generator: 'v0.app',
-  icons: {
-    icon: '/icon.svg',
+  title: "WeaveIt - AI Video Tutorial Generator",
+  description:
+    "Transform your code and documentation into professional video tutorials instantly with AI. Perfect for developers, DevRels, educators, and content creators.",
+  keywords: ["AI", "video tutorials", "code tutorials", "developer tools", "education", "content creation"],
+  authors: [{ name: "WeaveIt AI" }],
+  openGraph: {
+    title: "WeaveIt - AI Video Tutorial Generator",
+    description: "Transform your code into professional video tutorials in seconds with AI",
+    type: "website",
   },
+    generator: 'v0.app'
+}
+
+export const viewport = {
+  themeColor: "#8b5cf6",
+  width: "device-width",
+  initialScale: 1,
 }
 
 export default function RootLayout({
@@ -21,12 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <meta name="theme-color" content="#000000" />
-      </head>
-      <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>
-        {children}
-      </body>
+      <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>{children}</body>
     </html>
   )
 }
