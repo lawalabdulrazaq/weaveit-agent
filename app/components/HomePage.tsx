@@ -16,6 +16,7 @@ import {
   Star,
   Users,
   Clock,
+  Globe,
   CheckCircle,
   ArrowDown,
   Volume2,
@@ -312,6 +313,258 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">Simple, Transparent Pricing</h2>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              Purchase credits based on your needs. Each video generation costs credits depending on length and quality settings.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Free Trial */}
+            <div className="rounded-2xl p-6 bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
+              <div>
+                <div className="text-sm text-weaveit-400 font-semibold mb-2">7-Day Free Trial</div>
+                <div className="text-4xl font-bold mb-1">$0</div>
+                <div className="text-sm text-gray-400 mb-4">All new users</div>
+                <div className="mb-4 pb-4 border-b border-gray-700">
+                  <div className="text-sm font-medium text-white">28 credits</div>
+                  <div className="text-xs text-gray-400">4 credits/day</div>
+                </div>
+                <ul className="text-sm text-gray-300 space-y-2 mb-4">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>4 credits per day</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Documentation import</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Code → video generation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Basic voice library</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="mt-4">
+                <Link
+                  href="/studio"
+                  className="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700 text-white rounded-lg font-medium transition-all"
+                >
+                  Get Started
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Starter Plan */}
+            <div className="rounded-2xl p-6 bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
+              <div>
+                <div className="text-sm text-weaveit-400 font-semibold mb-2">Starter Plan</div>
+                <div className="text-4xl font-bold mb-1">$5</div>
+                <div className="text-sm text-gray-400 mb-4">Individuals & learners</div>
+                <div className="mb-4 pb-4 border-b border-gray-700">
+                  <div className="text-sm font-medium text-white">30 credits</div>
+                  <div className="text-xs text-gray-400">per month</div>
+                </div>
+                <ul className="text-sm text-gray-300 space-y-2 mb-4">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Generate 15 videos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Basic voices</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>English generation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Community support</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="mt-4">
+                <Link
+                  href="/pricing"
+                  className="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-all border border-gray-700"
+                >
+                  Select Plan
+                </Link>
+              </div>
+            </div>
+
+            {/* Growth Plan */}
+            <div className="rounded-2xl p-6 bg-gradient-to-br from-weaveit-500/15 to-weaveit-600/5 border border-weaveit-500/30 flex flex-col justify-between ring-1 ring-weaveit-500/20">
+              <div>
+                <div className="inline-block px-3 py-1 bg-weaveit-500/20 border border-weaveit-500/30 rounded-full text-weaveit-400 text-xs font-semibold mb-3">Most Popular</div>
+                <div className="text-sm text-weaveit-400 font-semibold mb-2">Growth Plan</div>
+                <div className="text-4xl font-bold mb-1">$10</div>
+                <div className="text-sm text-gray-400 mb-4">Content creators</div>
+                <div className="mb-4 pb-4 border-b border-gray-700">
+                  <div className="text-sm font-medium text-white">80 credits</div>
+                  <div className="text-xs text-gray-400">per month</div>
+                </div>
+                <ul className="text-sm text-gray-300 space-y-2 mb-4">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Generate 40 videos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Premium voices</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Multi-language support</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Faster rendering</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="mt-4">
+                <Link
+                  href="/pricing"
+                  className="w-full inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700 text-white rounded-lg font-medium transition-all"
+                >
+                  Select Plan
+                </Link>
+              </div>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="rounded-2xl p-6 bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
+              <div>
+                <div className="text-sm text-weaveit-400 font-semibold mb-2">Pro Plan</div>
+                <div className="text-4xl font-bold mb-1">$20</div>
+                <div className="text-sm text-gray-400 mb-4">Professional creators</div>
+                <div className="mb-4 pb-4 border-b border-gray-700">
+                  <div className="text-sm font-medium text-white">150 credits</div>
+                  <div className="text-xs text-gray-400">per month</div>
+                </div>
+                <ul className="text-sm text-gray-300 space-y-2 mb-4">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Generate 75 videos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Full voice library</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>Regional dialects</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0 mt-0.5" />
+                    <span>API early access</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="mt-4">
+                <Link
+                  href="/pricing"
+                  className="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-all border border-gray-700"
+                >
+                  Select Plan
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="text-gray-400 mb-4">Need a custom solution?</p>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-all border border-gray-700"
+            >
+              View Enterprise Plans
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Partnerships Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">Trusted Partnerships</h2>
+          </div>
+
+          {/* Animated Carousel */}
+          <style>{`
+            @keyframes carousel-loop {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-33.333%); }
+            }
+            .carousel-container {
+              animation: carousel-loop 12s linear infinite;
+            }
+            .carousel-container:hover {
+              animation-play-state: paused;
+            }
+          `}</style>
+
+          <div className="relative overflow-hidden bg-gradient-to-r from-gray-900/20 via-transparent to-gray-900/20 rounded-3xl p-8 border border-gray-800/50">
+            <div className="flex gap-8 carousel-container" style={{ width: '400%' }}>
+              {/* Partner 1 - Solana */}
+              <div className="flex-shrink-0 w-80 h-80 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/20 p-8 hover:border-blue-500/50 transition-all">
+                <div className="w-48 h-48 flex items-center justify-center mb-6">
+                  <img src="/partnerships/solana.svg" alt="Solana" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2 text-center">Solana</h3>
+                <p className="text-sm text-gray-400 text-center">High-performance blockchain infrastructure</p>
+              </div>
+
+              {/* Partner 2 - Cyrene AI */}
+              <div className="flex-shrink-0 w-80 h-80 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/20 p-8 hover:border-purple-500/50 transition-all">
+                <div className="w-48 h-48 flex items-center justify-center mb-6">
+                  <img src="/partnerships/cyrene-ai.svg" alt="Cyrene AI" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2 text-center">Cyrene AI</h3>
+                <p className="text-sm text-gray-400 text-center">Fair launchpad for early-stage projects on Solana</p>
+              </div>
+
+              {/* Partner 3 - Dcodeblock */}
+              <div className="flex-shrink-0 w-80 h-80 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/20 p-8 hover:border-cyan-500/50 transition-all">
+                <div className="w-48 h-48 flex items-center justify-center mb-6">
+                  <img src="/partnerships/dcodeblock.svg" alt="Dcodeblock" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2 text-center">Dcodeblock</h3>
+                <p className="text-sm text-gray-400 text-center">Powering the Builder Economy</p>
+              </div>
+
+              {/* Duplicate Partner 1 for seamless loop - Solana */}
+              <div className="flex-shrink-0 w-80 h-80 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/20 p-8 hover:border-blue-500/50 transition-all">
+                <div className="w-48 h-48 flex items-center justify-center mb-6">
+                  <img src="/partnerships/solana.svg" alt="Solana" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2 text-center">Solana</h3>
+                <p className="text-sm text-gray-400 text-center">High-performance blockchain infrastructure</p>
+              </div>
+            </div>
+
+            {/* Navigation dots */}
+            <div className="flex justify-center gap-2 mt-8">
+              <div className="w-2 h-2 rounded-full bg-weaveit-500 opacity-100"></div>
+              <div className="w-2 h-2 rounded-full bg-gray-600"></div>
+              <div className="w-2 h-2 rounded-full bg-gray-600"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Roadmap Section */}
       <section id="roadmap" className="py-20 bg-gray-900/50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -496,6 +749,66 @@ export default function HomePage() {
                   <div className="flex flex-col items-center">
                     <div className="w-10 h-10 bg-gray-700 rounded-full border-4 border-[#0a0e17] shadow-xl"></div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section id="team" className="py-20 bg-gray-900/50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-white mb-4">Team</h2>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">The strength of WeaveIt comes from a team that has actually built, shipped, and lived inside developer ecosystems.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-start">
+            {/* Founder 1 */}
+            <div className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 rounded-2xl p-8 border border-gray-700/40">
+              <div className="flex items-start space-x-6">
+                <div className="w-36 h-36 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-gray-700/50">
+                  <img src="/team/lawal.jpg" alt="Lawal Abdulrazaq" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-semibold text-white">Lawal Abdulrazaq — Founder</h3>
+                  <div className="flex items-center space-x-3 mt-2">
+                    <a href="https://x.com/loganthewise" target="_blank" rel="noreferrer" className="inline-flex items-center text-gray-300 hover:text-weaveit-400">
+                      {/* X logo */}
+                      <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M23 3.01c-.8.35-1.66.6-2.56.7.92-.55 1.63-1.42 1.96-2.46-.86.51-1.8.88-2.8 1.08A4.5 4.5 0 0012 7.5v.57A12.8 12.8 0 013 5.15a4.48 4.48 0 001.39 6 4.41 4.41 0 01-2.04-.56v.06a4.5 4.5 0 003.6 4.4c-.52.14-1.06.17-1.6.06.45 1.4 1.75 2.42 3.3 2.45A9.03 9.03 0 012 19.54a12.73 12.73 0 006.92 2.03c8.3 0 12.85-6.87 12.85-12.83v-.58A9.2 9.2 0 0023 3.01z"/></svg>
+                      <span className="text-sm">@loganthewise</span>
+                    </a>
+                    <a href="https://dev-logan-portfolio.vercel.app/" target="_blank" rel="noreferrer" className="inline-flex items-center text-gray-300 hover:text-weaveit-400">
+                      <Globe className="w-4 h-4 mr-2" />
+                      <span className="text-sm">Portfolio</span>
+                    </a>
+                  </div>
+                  <p className="text-gray-300 mt-3">A full-stack engineer and AI builder with experience creating developer tools, leading tech bootcamps, and building production-ready systems. Passionate about making technical learning faster and more accessible.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Founder 2 */}
+            <div className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 rounded-2xl p-8 border border-gray-700/40">
+              <div className="flex items-start space-x-6">
+                <div className="w-36 h-36 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-gray-700/50">
+                  <img src="/team/orkar.jpg" alt="Orkar A. Melch. Fabian" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-semibold text-white">Orkar Fabian —  Co-Founder</h3>
+                  <div className="flex items-center space-x-3 mt-2">
+                    <a href="https://x.com/OfficialBenFab1" target="_blank" rel="noreferrer" className="inline-flex items-center text-gray-300 hover:text-weaveit-400">
+                      {/* X logo */}
+                      <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M23 3.01c-.8.35-1.66.6-2.56.7.92-.55 1.63-1.42 1.96-2.46-.86.51-1.8.88-2.8 1.08A4.5 4.5 0 0012 7.5v.57A12.8 12.8 0 013 5.15a4.48 4.48 0 001.39 6 4.41 4.41 0 01-2.04-.56v.06a4.5 4.5 0 003.6 4.4c-.52.14-1.06.17-1.6.06.45 1.4 1.75 2.42 3.3 2.45A9.03 9.03 0 012 19.54a12.73 12.73 0 006.92 2.03c8.3 0 12.85-6.87 12.85-12.83v-.58A9.2 9.2 0 0023 3.01z"/></svg>
+                      <span className="text-sm">@OfficialBenFab1</span>
+                    </a>
+                    <a href="https://dev-orkarfabian.vercel.app/" target="_blank" rel="noreferrer" className="inline-flex items-center text-gray-300 hover:text-weaveit-400">
+                      <Globe className="w-4 h-4 mr-2" />
+                      <span className="text-sm">Portfolio</span>
+                    </a>
+                  </div>
+                  <p className="text-gray-300 mt-3">Software engineer and systems architect focused on scalable products and developer experience. Experienced in building API-driven platforms and engineering workflows from the ground up.</p>
                 </div>
               </div>
             </div>
