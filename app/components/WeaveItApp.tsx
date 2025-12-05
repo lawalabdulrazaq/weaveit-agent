@@ -643,37 +643,6 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
           <span className="text-violet-400">{success}</span>
         </div>
       )}
-
-      {/* Tips Section */}
-      <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700/30 backdrop-blur-sm">
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-            <FileText className="w-5 h-5 text-blue-400" />
-          </div>
-          <div>
-            <h4 className="font-semibold text-white">💡 Tips for Better Videos</h4>
-            <p className="text-sm text-gray-400">Optimize your script for best results</p>
-          </div>
-        </div>
-        <ul className="text-sm text-gray-300 space-y-2">
-          <li className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-violet-600 rounded-full"></div>
-            <span>Be clear and specific in your explanations</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-violet-600 rounded-full"></div>
-            <span>Include step-by-step instructions</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-violet-600 rounded-full"></div>
-            <span>Mention specific code examples or concepts</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-violet-600 rounded-full"></div>
-            <span>Keep sections organized with clear transitions</span>
-          </li>
-        </ul>
-      </div>
     </form>
   )
 }
@@ -783,7 +752,7 @@ export default function WeaveItApp() {
           try {
             const pointsData = await backendModule.fetchUserPoints(walletAddress)
             setPoints(typeof pointsData.points === 'number' ? pointsData.points : null)
-            setTrialExpiresAt(pointsData.trial_expires_at || pointsData.trialExpiresAt || null)
+            setTrialExpiresAt(pointsData.trial_expires_at || pointsData.trial_expires_at || null)
           } catch (err) {
             console.debug('Failed to fetch points:', err)
             setPoints(null)
@@ -928,39 +897,36 @@ export default function WeaveItApp() {
   // App View
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      {/* Header */}
+      {/* Unified Header */}
       <header className="bg-slate-900/70 backdrop-blur-sm border-b border-slate-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
+            {/* Left: Home + Title */}
             <div className="flex items-center space-x-3">
-              <button onClick={() => (window.location.href = '/')} className="text-sm text-slate-300 hover:text-white">← Back to Home</button>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-500 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
+              <button onClick={() => (window.location.href = '/')} className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-slate-800/30 transition-colors">← Home</button>
+              <div className="h-6 w-px bg-slate-700"></div>
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-500 flex items-center justify-center">
+                <Sparkles className="w-3 h-3 text-white" />
               </div>
-              <div>
-                <div className="text-base font-semibold">WeaveIt Studio</div>
-                <div className="text-xs text-slate-400">Create AI-powered tutorial videos...</div>
+              <div className="flex flex-col">
+                <div className="text-sm font-semibold">WeaveIt Studio</div>
+                <div className="text-xs text-slate-500">Create AI-powered tutorial videos</div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
-              <div className="text-sm text-slate-300 text-right">
-                <div className="font-medium">{publicKey ? publicKey.toString().slice(0, 6) + '...' + publicKey.toString().slice(-4) : 'Not connected'}</div>
-                <div className="text-xs text-slate-500">Wallet</div>
-                <div className="text-xs text-slate-300 mt-1">
-                  Credits: {points === null ? "—" : points}
-                  {trialExpiresAt ? (
-                    <span className="text-xs text-slate-400 block">Trial expires: {new Date(trialExpiresAt).toLocaleString()}</span>
-                  ) : null}
-                </div>
+            {/* Right: Wallet + Credits + Disconnect */}
+            <div className="flex items-center space-x-4">
+              <div className="text-xs text-slate-300 text-right hidden sm:block">
+                <div className="font-mono text-slate-400">{publicKey ? publicKey.toString().slice(0, 6) + '...' + publicKey.toString().slice(-4) : 'Not connected'}</div>
+                <div className="text-slate-500">Credits: {points === null ? "—" : points}</div>
               </div>
 
               <button
                 onClick={handleDisconnect}
-                className="flex items-center space-x-2 px-2 py-1 rounded-md border border-slate-800 bg-slate-800/30 hover:bg-slate-800/50 text-sm"
+                className="flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/40 hover:bg-slate-800/60 text-xs text-slate-200 transition-colors"
               >
-                <LogOut className="w-4 h-4 text-slate-200" />
-                <span className="text-sm text-slate-200">Disconnect</span>
+                <LogOut className="w-3 h-3" />
+                <span>Disconnect</span>
               </button>
             </div>
           </div>

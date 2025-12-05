@@ -15,23 +15,22 @@ export default function Navbar() {
   return (
     <nav className="bg-[#0a0e17]/95 backdrop-blur-xl fixed w-full z-50 border-b border-gray-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 group">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <div className="relative">
                 <img
-                  className="h-12 w-12 rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-110"
+                  className="h-10 w-10 rounded-lg shadow-lg transition-transform duration-300 group-hover:scale-110"
                   src="/assets/weav12.jpg"
                   alt="WeaveIt Logo"
                 />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-weaveit-500/20 to-weaveit-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-weaveit-500/20 to-weaveit-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-weaveit-500 to-weaveit-600 bg-clip-text text-transparent">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-weaveit-500 to-weaveit-600 bg-clip-text text-transparent">
                   WeaveIt
                 </h1>
-                <p className="text-xs text-gray-400">AI Video Generator</p>
               </div>
             </div>
           </Link>
