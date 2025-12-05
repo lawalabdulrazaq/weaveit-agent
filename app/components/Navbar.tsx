@@ -56,16 +56,16 @@ export default function Navbar() {
                 Features
               </Link>
               <Link
-                href="#how-it-works"
+                href="#product"
                 className="text-gray-300 hover:text-weaveit-500 px-3 py-2 text-sm font-medium transition-colors duration-200"
               >
-                How It Works
+                Product
               </Link>
               <Link
-                href="#demo"
+                href="#roadmap"
                 className="text-gray-300 hover:text-weaveit-500 px-3 py-2 text-sm font-medium transition-colors duration-200"
               >
-                Demo
+                Roadmap
               </Link>
               <Link
                 href="/pricing"
@@ -123,18 +123,18 @@ export default function Navbar() {
             Features
           </Link>
           <Link
-            href="#how-it-works"
+            href="#product"
             className="text-gray-300 hover:text-white hover:bg-gray-800/50 block px-4 py-3 rounded-xl text-base font-medium transition-colors duration-200"
             onClick={() => setIsMenuOpen(false)}
           >
-            How It Works
+            Product
           </Link>
           <Link
-            href="#demo"
+            href="#roadmap"
             className="text-gray-300 hover:text-white hover:bg-gray-800/50 block px-4 py-3 rounded-xl text-base font-medium transition-colors duration-200"
             onClick={() => setIsMenuOpen(false)}
           >
-            Demo
+            Roadmap
           </Link>
           <Link
             href="/studio"
