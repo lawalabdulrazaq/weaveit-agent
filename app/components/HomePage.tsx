@@ -43,7 +43,7 @@ export default function HomePage() {
                   AI-Powered Generator
                 </div>
                 <h1 className="text-6xl lg:text-8xl font-bold text-white leading-tight">
-                  Automating Technical
+                  Simplifying Technical
                   <span className="block bg-gradient-to-r from-weaveit-500 to-weaveit-600 bg-clip-text text-transparent">
                     Learning
                   </span>
