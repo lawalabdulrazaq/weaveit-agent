@@ -49,7 +49,7 @@ export default function HomePage() {
                   </span>
                 </h1>
                 <p className="text-2xl text-gray-300 leading-relaxed max-w-4xl mx-auto font-semibold">
-                  WeaveIt makes technical learning effortless by converting code and docs into AI-narrated video tutorials. Faster onboarding, clearer explanations, zero manual editing.
+                  AI-narrated video tutorials, Faster onboarding, clearer explanations, zero manual editing.
                 </p>
               </div>
 

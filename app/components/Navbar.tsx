@@ -22,7 +22,7 @@ export default function Navbar() {
               <div className="relative">
                 <img
                   className="h-10 w-10 rounded-lg shadow-lg transition-transform duration-300 group-hover:scale-110"
-                  src="/assets/weav12.jpg"
+                  src="/assets/WeavLog.jpg"
                   alt="WeaveIt Logo"
                 />
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-weaveit-500/20 to-weaveit-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

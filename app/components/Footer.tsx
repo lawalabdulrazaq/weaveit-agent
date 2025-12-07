@@ -8,17 +8,15 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="space-y-8 xl:col-span-1">
             <div className="flex items-center space-x-3">
-              <img className="h-10 w-10 rounded-xl" src="/assets/weav12.jpg" alt="WeaveIt" />
+              <img className="h-10 w-10 rounded-xl" src="/assets/WeavLog.jpg" alt="WeaveIt" />
               <div>
                 <h3 className="text-xl font-bold bg-gradient-to-r from-weaveit-500 to-weaveit-600 bg-clip-text text-transparent">
                   WeaveIt
                 </h3>
-                <p className="text-xs text-gray-400">AI Video Generator</p>
               </div>
             </div>
             <p className="text-gray-300 text-base leading-relaxed max-w-md">
-              Transform your code explanations into professional tutorial videos with AI-powered narration and visual
-              generation.
+              AI-narrated video tutorials, Faster onboarding, clearer explanations, zero manual editing.
             </p>
             <div className="flex space-x-6">
               <a
@@ -53,7 +51,7 @@ export default function Footer() {
           <div className="mt-12 grid grid-cols-2 gap-8 xl:mt-0 xl:col-span-2">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold text-weaveit-500 tracking-wider uppercase mb-4">Product</h3>
+                {/* <h3 className="text-sm font-semibold text-weaveit-500 tracking-wider uppercase mb-4">Product</h3>
                 <ul className="space-y-3">
                   <li>
                     <a
@@ -87,7 +85,7 @@ export default function Footer() {
                       Demo
                     </a>
                   </li>
-                </ul>
+                </ul> */}
               </div>
               <div className="mt-12 md:mt-0">
                 <h3 className="text-sm font-semibold text-weaveit-500 tracking-wider uppercase mb-4">Resources</h3>
