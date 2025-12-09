@@ -305,9 +305,7 @@ export default function Roadmap() {
                   <div className="bg-gradient-to-br from-purple-500/15 to-purple-600/5 rounded-2xl p-8 border border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 shadow-lg">
                     <div className="flex items-start space-x-4 mb-6">
                       <div className="w-12 h-12 bg-purple-500/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                        </svg>
+                        <img src="/icons/barchart.svg" alt="Advanced Understanding & Enterprise" className="w-7 h-7" />
                       </div>
                       <div>
                         <h3 className="text-2xl font-bold text-white mb-1">Advanced Understanding & Enterprise</h3>

@@ -135,7 +135,7 @@ export default function Hero() {
                   href="/studio"
                   className="inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700 text-white font-bold text-lg rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  <Zap className="w-5 h-5 mr-3" />
+                  <img src="/icons/thund.svg" alt="Start Icon" className="w-7 h-7" />
                   Start Creating
                   <ArrowRight className="w-5 h-5 ml-3" />
                 </Link>

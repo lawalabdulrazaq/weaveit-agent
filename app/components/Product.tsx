@@ -8,6 +8,8 @@ import {
   Users
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { ThunderIcon } from "@/components/icons/ThunderIcon";
+import { PeepIcon } from "@/components/icons/PeepIcon";
 
 function HexagonalMeshBackground() {
   // Generate hexagonal grid positions
@@ -263,14 +265,14 @@ export default function Products() {
           <div className="grid md:grid-cols-2 gap-8">
             {[
               {
-                icon: Zap,
+                icon: ThunderIcon,
                 title: "Discounted Purchases with Tokens",
                 description: "Anyone using the WeaveIt Token to pay for subscriptions at the $10 tier or above receives",
                 highlight: "30% off",
                 delay: 0.5,
               },
               {
-                icon: Users,
+                icon: PeepIcon,
                 title: "Governance Participation",
                 description: "Token holders can vote on product features, suggest improvements, and influence the roadmap. Give users a",
                 highlight: "direct voice",

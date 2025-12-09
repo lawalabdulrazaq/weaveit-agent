@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Code, Video, Download } from "lucide-react";
+const CodeIcon = "/assets/codepurp.png";
 
 function ParticleNetworkBackground() {
   // Generate random particle positions
@@ -208,7 +209,7 @@ export default function Features() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[
             {
-              icon: Code,
+              icon: CodeIcon,
               title: "Smart Code Analysis",
               description:
                 "AI automatically analyzes your code structure and creates logical explanations for each section.",
@@ -257,7 +258,11 @@ export default function Features() {
                 whileHover={{ rotate: 360, scale: 1.1 }}
                 transition={{ duration: 0.6 }}
               >
-                <f.icon className="w-full h-full" />
+                {typeof f.icon === 'string' ? (
+                  <img src={f.icon} alt={f.title} className="w-full h-full" />
+                ) : (
+                  <f.icon className="w-full h-full" />
+                )}
               </motion.div>
 
               <h3 className="text-xl font-semibold text-white mb-4 relative">

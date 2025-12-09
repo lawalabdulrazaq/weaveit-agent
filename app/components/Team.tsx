@@ -15,10 +15,10 @@ export default function Team() {
             <div className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 rounded-2xl p-8 border border-gray-700/40">
               <div className="flex items-start space-x-6">
                 <div className="w-36 h-36 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-gray-700/50">
-                  <img src="/team/lawal.jpg" alt="Lawal Abdulrazaq" className="w-full h-full object-cover" />
+                  <img src="/team/dp.jpg" alt="Lawal Abdulrazaq" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-semibold text-white">Lawal Abdulrazaq — Founder</h3>
+                  <h3 className="text-2xl font-semibold text-white">Lawal Abdulrazaq, Founder</h3>
                   <div className="flex items-center space-x-3 mt-2">
                     <a href="https://x.com/loganthewise" target="_blank" rel="noreferrer" className="inline-flex items-center text-gray-300 hover:text-weaveit-400">
                       {/* X logo */}
@@ -39,10 +39,10 @@ export default function Team() {
             <div className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 rounded-2xl p-8 border border-gray-700/40">
               <div className="flex items-start space-x-6">
                 <div className="w-36 h-36 bg-black rounded-xl overflow-hidden flex-shrink-0 border border-gray-700/50">
-                  <img src="/team/orkar.jpg" alt="Orkar A. Melch. Fabian" className="w-full h-full object-cover" />
+                  <img src="/team/orkardp.jpg" alt="Orkar A. Melch. Fabian" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-semibold text-white">Orkar Fabian —  Co-Founder</h3>
+                  <h3 className="text-2xl font-semibold text-white">Orkar Fabian, Co-Founder</h3>
                   <div className="flex items-center space-x-3 mt-2">
                     <a href="https://x.com/OfficialBenFab1" target="_blank" rel="noreferrer" className="inline-flex items-center text-gray-300 hover:text-weaveit-400">
                       {/* X logo */}

@@ -81,7 +81,8 @@ export default function Navbar() {
                     : "bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700 text-white transform hover:scale-105"
                 }`}
               >
-                <Zap className="w-4 h-4" />
+                {/* <Zap className="w-4 h-4" /> */}
+                <img src="/icons/thund.svg" alt="Start Icon" className="w-7 h-7" />
                 <span>Launch Studio</span>
               </Link>
             </div>
