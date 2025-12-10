@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Code,
+  // Code,
   Video,
   Sparkles,
   Zap,
@@ -10,6 +10,7 @@ import {
 import { motion } from "framer-motion";
 import { ThunderIcon } from "@/components/icons/ThunderIcon";
 import { PeepIcon } from "@/components/icons/PeepIcon";
+const Code = "/assets/code.png";
 
 function HexagonalMeshBackground() {
   // Generate hexagonal grid positions
@@ -226,7 +227,11 @@ export default function Products() {
                 whileHover={{ rotate: 360, scale: 1.15 }}
                 transition={{ duration: 0.6 }}
               >
-                <item.icon className="w-full h-full" />
+                {typeof item.icon === 'string' ? (
+                  <img src={item.icon} className="w-full h-full" alt={item.title} />
+                ) : (
+                  <item.icon className="w-full h-full" />
+                )}
               </motion.div>
               <h3 className="text-2xl font-semibold text-white mb-3">{item.title}</h3>
               <p className="text-gray-300 leading-relaxed text-lg">{item.description}</p>
