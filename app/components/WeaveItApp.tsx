@@ -946,6 +946,11 @@ export default function WeaveItApp() {
   const [selectedSource, setSelectedSource] = useState<{ name: string; content: string } | null>(null)
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([])
 
+  // Impromptu question state
+  const [impromptuQuestion, setImpromptuQuestion] = useState("")
+  const [impromptuMode, setImpromptuMode] = useState<"audio" | "video">("video")
+  const [impromptuLoading, setImpromptuLoading] = useState(false)
+
   // Import state
   const [importUrl, setImportUrl] = useState("")
   const [importLoading, setImportLoading] = useState(false)
@@ -959,6 +964,7 @@ export default function WeaveItApp() {
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const unifiedTextareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   // Import repo handler
   const handleImportRepo = async () => {
@@ -1217,10 +1223,20 @@ export default function WeaveItApp() {
 
   // Generate video/audio
   const handleGenerate = async () => {
-    if (!content.trim() && uploadedFiles.length === 0) {
+    // Derive unified preview content: script takes priority, otherwise combine uploaded sources
+    const previewContent =
+      content.trim().length > 0
+        ? content
+        : uploadedFiles
+            .map((f) => f.content)
+            .filter(Boolean)
+            .join("\n\n---\n\n")
+
+    if (!previewContent || previewContent.trim().length === 0) {
       setError("Please add content or upload a source file")
       return
     }
+
     if (!publicKey) {
       setError("Please connect your wallet")
       return
@@ -1236,26 +1252,29 @@ export default function WeaveItApp() {
     setError("")
 
     try {
+      const payload = {
+        type: "full",
+        mode: generationType,
+        content: previewContent,
+        sources: uploadedFiles.map((f) => ({ name: f.name })),
+        title: projectName,
+        wallet: publicKey.toString(),
+      }
+
       const response = await fetch(getBackendUrl("/api/generate"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          script: content,
-          title: projectName,
-          wallet: publicKey.toString(),
-          type: generationType,
-          files: uploadedFiles.map((f) => f.content).filter(Boolean),
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
+        const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || "Generation failed")
       }
 
       const data = await response.json()
 
-      // Update credits
+      // Update credits if provided
       if (data.remainingCredits !== undefined) {
         setPoints(data.remainingCredits)
       }
@@ -1274,6 +1293,79 @@ export default function WeaveItApp() {
       setError(err instanceof Error ? err.message : "Generation failed")
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Impromptu question generation
+  const handleImpromptuGenerate = async (mode: "audio" | "video") => {
+    if (!impromptuQuestion.trim()) {
+      return
+    }
+
+    // Derive preview content (script takes priority, then sources)
+    const previewContent =
+      content.trim().length > 0
+        ? content
+        : uploadedFiles
+            .map((f) => f.content)
+            .filter(Boolean)
+            .join("\n\n---\n\n")
+
+    if (!previewContent.trim()) {
+      setError("No content available to answer questions about")
+      return
+    }
+
+    if (!publicKey) {
+      setError("Please connect your wallet")
+      return
+    }
+
+    setImpromptuLoading(true)
+    setError("")
+
+    try {
+      const response = await fetch(getBackendUrl("/api/generate/impromptu"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "question",
+          mode: mode,
+          context: previewContent,
+          question: impromptuQuestion,
+          wallet: publicKey.toString(),
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Impromptu ${mode} generation failed`)
+      }
+
+      const data = await response.json()
+
+      // Update credits if provided
+      if (data.remainingCredits !== undefined) {
+        setPoints(data.remainingCredits)
+      }
+
+      // Add to videos list
+      const newVideo = {
+        id: Date.now().toString(),
+        url: data.url,
+        title: impromptuQuestion.substring(0, 50),
+        type: mode,
+        createdAt: new Date().toISOString(),
+      }
+      setVideos((prev) => [newVideo, ...prev])
+      setCurrentVideo({ url: data.url, title: impromptuQuestion.substring(0, 50) })
+
+      // Clear question input
+      setImpromptuQuestion("")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Impromptu ${mode} generation failed`)
+    } finally {
+      setImpromptuLoading(false)
     }
   }
 
@@ -1386,7 +1478,7 @@ export default function WeaveItApp() {
                       handleImportRepo()
                     }
                   }}
-                  placeholder="github.com/owner/repo"
+                  placeholder="Paste repo or docs URL"
                   className="flex-1 px-2 py-2 bg-slate-900/50 border border-slate-700 rounded text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                   disabled={importLoading}
                 />
@@ -1464,7 +1556,7 @@ export default function WeaveItApp() {
           </div>
         </aside>
 
-        {/* Center Panel - Content */}
+        {/* Center Panel - Unified Content */}
         <main className="flex-1 flex flex-col bg-[#0a0510]">
           <div className="p-4 border-b border-slate-800 flex items-center justify-between">
             <span className="font-semibold">Chat</span>
@@ -1474,150 +1566,130 @@ export default function WeaveItApp() {
           </div>
 
           <div className="flex-1 flex flex-col overflow-hidden">
-            {selectedSource ? (
-              // Source content view
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center">
-                    <Settings className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-semibold text-white">{projectName}</h2>
-                    <p className="text-xs text-slate-500 mt-1">1 source</p>
-                  </div>
-                </div>
-
-                {/* Source content - selectable text */}
-                <div className="prose prose-invert prose-sm max-w-none">
-                  <p className={`leading-relaxed whitespace-pre-wrap select-text ${
-                    selectedSource.content.startsWith("This document") || 
-                    selectedSource.content.startsWith("Preview not available")
-                      ? "text-slate-500 italic"
-                      : "text-slate-300"
-                  }`}>
-                    {selectedSource.content}
-                  </p>
-                </div>
-
-                {/* Action buttons for selected text */}
-                <div className="sticky bottom-0 bg-gradient-to-t from-[#0a0510] pt-4 mt-6">
-                  <div className="flex gap-2 mb-4">
-                    <button
-                      onClick={() => handleExplainSelection("audio")}
-                      className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center gap-1.5"
-                    >
-                      <Mic className="w-3 h-3" /> Explain as Audio
-                    </button>
-                    <button
-                      onClick={() => handleExplainSelection("video")}
-                      className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center gap-1.5"
-                    >
-                      <Video className="w-3 h-3" /> Explain as Video
-                    </button>
-                  </div>
-
-                  {/* Suggested questions */}
-                  {suggestedQuestions.length > 0 && (
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      {suggestedQuestions.map((q, i) => (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            setContent(q)
-                            setSelectedSource(null)
-                          }}
-                          className="flex-shrink-0 px-3 py-2 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-left max-w-[250px] truncate"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Input at bottom */}
-                  <div className="flex items-center gap-2 mt-3 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
-                    <input
-                      type="text"
-                      placeholder="Start typing..."
-                      className="flex-1 bg-transparent text-sm outline-none placeholder-slate-500"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                          setContent(e.currentTarget.value)
-                          setSelectedSource(null)
-                        }
-                      }}
+            {/* Unified Preview Session - Always present */}
+            <div className="flex-1 flex flex-col p-6 overflow-hidden">
+              {/* Unified Canvas: editable script at top, sources appended below inside one scrollable surface */}
+              <div className="flex-1 overflow-y-auto mb-4 min-h-[300px] p-4 bg-slate-900/10 border border-slate-700/50 rounded-xl">
+                {/* Show only one view at a time: script OR sources. If neither, show a read-only overlay hint. */}
+                {content.trim().length === 0 && uploadedFiles.length === 0 ? (
+                  <div className="h-full relative">
+                    <textarea
+                      ref={unifiedTextareaRef}
+                      value={content}
+                      onChange={(e) => handleContentChange(e.target.value)}
+                      placeholder=""
+                      className="w-full h-full min-h-[300px] max-h-[80vh] bg-transparent p-6 text-white placeholder-transparent resize-none focus:outline-none"
                     />
-                    <span className="text-xs text-slate-500">{uploadedFiles.length} source(s)</span>
-                    <button className="p-1.5 rounded-lg bg-purple-600 hover:bg-purple-700">
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : !content.trim() && uploadedFiles.length === 0 ? (
-              // Empty state - show upload prompt
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-                <div className="w-12 h-12 rounded-full bg-purple-600/20 flex items-center justify-center mb-4">
-                  <Upload className="w-6 h-6 text-purple-400" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">Add a source to get started</h3>
-                <p className="text-slate-400 text-sm mb-6 max-w-sm">
-                  Upload documents or paste your script directly to create AI-powered video or audio content
-                </p>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-6 py-3 rounded-lg border border-slate-600 hover:border-purple-500 hover:bg-purple-500/10 transition"
-                >
-                  Upload a source
-                </button>
-              </div>
-            ) : (
-              // Content input view
-              <div className="flex-1 flex flex-col p-6">
-                <textarea
-                  value={content}
-                  onChange={(e) => handleContentChange(e.target.value)}
-                  placeholder="Paste your script, tutorial content, or describe what you want to create..."
-                  className="flex-1 w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[200px]"
-                />
 
-                {error && (
-                  <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    {error}
+                    {/* Centered, non-interactive placeholder overlay (unclickable write-up) */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
+                      <div className="text-lg text-slate-500 mb-4 select-none">Start typing your script here...</div>
+                      <div className="text-sm text-slate-400 select-none">Paste your script or add sources from the left panel</div>
+                    </div>
+                  </div>
+                ) : content.trim().length > 0 ? (
+                  // Script-only view: textarea fills remaining canvas, non-resizable and scrollable
+                  <div className="flex flex-col h-full">
+                    <label className="block text-sm font-semibold text-white mb-2">Your Script</label>
+                    <textarea
+                      value={content}
+                      onChange={(e) => handleContentChange(e.target.value)}
+                      placeholder="Start typing your script here..."
+                      className="w-full flex-1 bg-transparent border border-slate-800/40 rounded-xl p-3 text-white placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 overflow-auto"
+                    />
+                  </div>
+                ) : (
+                  // Sources-only view: combine available extracted text into one continuous block (no separators or script area)
+                  <div>
+                    <label className="block text-sm font-semibold text-white mb-2">Source Content</label>
+                    <pre className="whitespace-pre-wrap text-sm text-slate-300 bg-transparent p-3 rounded w-full">{uploadedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n") || "(No extractable text)"}</pre>
                   </div>
                 )}
-
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="text-xs text-slate-500">
-                    {uploadedFiles.length > 0 && <span>{uploadedFiles.length} source(s) added</span>}
-                  </div>
-                  <button
-                    onClick={handleGenerate}
-                    disabled={loading || (!content.trim() && uploadedFiles.length === 0)}
-                    className={`px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition ${
-                      loading
-                        ? "bg-slate-700 cursor-not-allowed"
-                        : generationType === "video"
-                          ? "bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700"
-                          : "bg-gradient-to-r from-pink-600 to-orange-500 hover:from-pink-700 hover:to-orange-600"
-                    }`}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Generating...
-                      </>
-                    ) : (
-                      <>
-                        {generationType === "video" ? <Video className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                        Generate {generationType === "video" ? "Video" : "Audio"} ({generationType === "video" ? 2 : 1}{" "}
-                        credits)
-                      </>
-                    )}
-                  </button>
-                </div>
               </div>
-            )}
+
+              {/* Error Message */}
+              {error && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              {/* Question Bar + Impromptu Generation */}
+              <div className="flex items-center gap-2 p-3 bg-slate-900/80 rounded-xl border border-slate-700 mb-4">
+                <input
+                  type="text"
+                  value={impromptuQuestion}
+                  onChange={(e) => setImpromptuQuestion(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && impromptuQuestion.trim() && !impromptuLoading) {
+                      handleImpromptuGenerate(impromptuMode)
+                    }
+                  }}
+                  placeholder="Ask a question about the content..."
+                  className="flex-1 bg-transparent text-sm outline-none placeholder-slate-500"
+                  disabled={impromptuLoading}
+                />
+                <button
+                  onClick={() => handleImpromptuGenerate("audio")}
+                  disabled={!impromptuQuestion.trim() || impromptuLoading}
+                  className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-1.5 transition"
+                >
+                  {impromptuLoading && impromptuMode === "audio" ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Mic className="w-3 h-3" />
+                  )}
+                  Audio
+                </button>
+                <button
+                  onClick={() => handleImpromptuGenerate("video")}
+                  disabled={!impromptuQuestion.trim() || impromptuLoading}
+                  className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-1.5 transition"
+                >
+                  {impromptuLoading && impromptuMode === "video" ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Video className="w-3 h-3" />
+                  )}
+                  Video
+                </button>
+              </div>
+
+              {/* Bottom Action Bar - Main Generation */}
+              <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-700">
+                <div className="text-xs text-slate-500 flex items-center gap-3">
+                  {uploadedFiles.length > 0 && <span>{uploadedFiles.length} source(s)</span>}
+                  {content.trim().length > 0 && (
+                    <span>
+                      ~{Math.ceil(content.trim().split(/\s+/).length / 150)} min video
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={handleGenerate}
+                  disabled={loading || (content.trim().length === 0 && uploadedFiles.length === 0)}
+                  className={`px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition ${
+                    loading
+                      ? "bg-slate-700 cursor-not-allowed"
+                      : generationType === "video"
+                        ? "bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700"
+                        : "bg-gradient-to-r from-pink-600 to-orange-500 hover:from-pink-700 hover:to-orange-600"
+                  } disabled:opacity-60 disabled:cursor-not-allowed`}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Generating...
+                    </>
+                  ) : (
+                    <>
+                      {generationType === "video" ? <Video className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                      Generate Full ({generationType === "video" ? 2 : 1} credits)
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </main>
 
