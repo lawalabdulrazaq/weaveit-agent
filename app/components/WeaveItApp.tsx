@@ -30,8 +30,8 @@ import {
 } from "lucide-react"
 
 // Dynamic imports for libraries (to handle SSR compatibility)
-let pdfjsLib: any = null
-let mammoth: any = null
+let pdfjsLib: any
+let mammoth: any
 
 const initializeLibraries = async () => {
   if (typeof window !== "undefined" && !pdfjsLib) {
