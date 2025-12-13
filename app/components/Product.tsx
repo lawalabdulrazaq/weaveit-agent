@@ -10,7 +10,7 @@ import {
 import { motion } from "framer-motion";
 import { ThunderIcon } from "@/components/icons/ThunderIcon";
 import { PeepIcon } from "@/components/icons/PeepIcon";
-const Code = "/assets/code.png";
+// const Code = "/assets/code.png";
 
 function HexagonalMeshBackground() {
   // Generate hexagonal grid positions
@@ -173,7 +173,11 @@ export default function Products() {
         <div className="grid lg:grid-cols-2 gap-12 mb-16">
           {[
             {
-              icon: Code,
+              icon: {
+                type: "image",
+                src: "/assets/code.png",
+              },
+              // icon: Code,
               title: "Convert Content",
               description: "Code, docs, and scripts into AI-narrated tutorial videos",
               color: "text-blue-400",
@@ -227,8 +231,8 @@ export default function Products() {
                 whileHover={{ rotate: 360, scale: 1.15 }}
                 transition={{ duration: 0.6 }}
               >
-                {typeof item.icon === 'string' ? (
-                  <img src={item.icon} className="w-full h-full" alt={item.title} />
+                {typeof item.icon === 'object' && 'src' in item.icon ? (
+                  <img src={item.icon.src} className="w-full h-full" alt={item.title} />
                 ) : (
                   <item.icon className="w-full h-full" />
                 )}

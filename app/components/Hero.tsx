@@ -217,13 +217,14 @@ export default function Hero() {
                     </div>
                   </div>
 
-                  <div className="bg-black rounded-lg aspect-video flex items-center justify-center">
+                  <div className="aspect-video flex items-center justify-center overflow-hidden rounded-lg">
                     <video
-                      controls
+                      autoPlay
+                      muted
+                      loop
                       className="w-full h-full object-cover"
-                      poster="/placeholder.svg?height=400&width=600&text=Demo+Tutorial+Video"
                     >
-                      <source src="/demo-video.mp4" type="video/mp4" />
+                      <source src="/demo.mp4" type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
                   </div>
