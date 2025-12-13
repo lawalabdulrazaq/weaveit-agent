@@ -1,0 +1,1 @@
+self.__NEXT_FONT_MANIFEST="{\"pages\":{},\"app\":{\"/home/orkarfabianthewise/code/weaveit-agent/app/layout\":[\"static/media/74881467e6e5bf3a-s.p.otf\",\"static/media/f35e969ea893e9bc-s.p.otf\"]},\"appUsingSizeAdjust\":true,\"pagesUsingSizeAdjust\":false}"
