@@ -27,8 +27,7 @@ jobs:
           # p/default = Generic security best practices
           # p/react   = React-specific security rules
           # p/typescript = TypeScript-specific security rules
-          config: >-
-            .semgrep.yml 
+          config: >- 
             p/default
             p/react
             p/typescript
