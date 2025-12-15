@@ -12,8 +12,6 @@ import {
   Share2,
   AlertCircle,
   CheckCircle,
-  DollarSign,
-  FileText,
   ArrowRight,
   Video,
   Sparkles,
@@ -330,8 +328,18 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loadingStep, setLoadingStep] = useState("")
+  const [progressPct, setProgressPct] = useState<number>(0)
+  const eventSourceRef = useRef<EventSource | null>(null)
   const wallet = useWallet()
   const { connection } = useConnection()
+
+  useEffect(() => {
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+      }
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -399,32 +407,14 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
         onCreditsUpdate(videoData.remainingCredits)
       }
 
-      // Construct URL based on generation type and response data
-      let contentUrl: string | null = null
-      
-      if (generationType === "audio") {
-        // For audio generation, use audio-specific endpoint
-        const audioId = videoData.audioId
-        if (audioId) {
-          contentUrl = `${backendBaseUrl}/api/audio/${audioId}`
-        }
-      } else {
-        // For video generation, use video endpoint
-        const contentId = videoData.contentId || videoData.videoId
-        if (contentId) {
-          contentUrl = `${backendBaseUrl}/api/videos/${contentId}`
-        }
-      }
-      
-      if (!contentUrl) {
-        throw new Error(`No ${generationType} URL or content ID received from backend`)
+      // Expect jobId for SSE listening
+      const jobId = videoData.jobId || videoData.id
+      if (!jobId) {
+        throw new Error(`No job ID received from backend`)
       }
 
-      console.log("Content URL constructed:", contentUrl)
-      onVideoGenerated(contentUrl, videoData.title || title)
-      setSuccess(`${generationType === "video" ? "Video" : "Audio"} generated successfully!`)
-      setScript("")
-      setTitle("")
+      // Set up SSE listener for real-time updates
+      setupSSEListener(jobId, videoData.title || title)
     } catch (err: any) {
       console.error("Generation failed:", err)
       if (err.message?.includes("Wallet not connected")) {
@@ -434,72 +424,96 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
       } else {
         setError("Failed to generate video. Please try again.")
       }
-    } finally {
       setLoading(false)
-      setLoadingStep("")
+      // Close SSE if open
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+        eventSourceRef.current = null
+      }
+    } finally {
+      // Loading state is managed by SSE event handlers for async generation
     }
   }
 
-  const pollVideoStatus = async (contentId: string, videoTitle: string) => {
-    if (!contentId) {
-      console.error("No content ID provided for polling")
-      setError("Missing video ID")
-      return
+  const setupSSEListener = (jobId: string, videoTitle: string) => {
+    // Close any existing SSE connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close()
     }
 
-    const steps = [
-      "Analyzing your script...",
-      "Generating AI narration...",
-      "Creating visual elements...",
-      "Rendering video...",
-      "Finalizing output...",
-    ]
+    const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
+    const eventSource = new EventSource(`${backendBaseUrl}/api/jobs/events?jobIds=${jobId}`)
+    eventSourceRef.current = eventSource
 
-    let stepIndex = 0
-    const maxAttempts = 60 // 5 minutes max
-    let attempts = 0
+    // Initialize progress
+    setProgressPct(0)
+    setLoadingStep("Queued for generation...")
 
-    const poll = async () => {
+    eventSource.onmessage = (event) => {
       try {
-        // const statusResponse = await fetch(`/api/videos/status/${contentId}`)
-        const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
-        const statusResponse = await fetch(`${backendBaseUrl}/api/videos/status/${contentId}`)
-        const statusData = await statusResponse.json()
+        const update = JSON.parse(event.data)
+        console.log("SSE update:", update)
 
-        console.log("Status response:", statusData)
+        // Update progress percentage (cap at 99% until completion)
+        if (typeof update.progress === 'number') {
+          setProgressPct(Math.max(0, Math.min(99, Math.round(update.progress))))
+        } else if (typeof update.percent === 'number') {
+          setProgressPct(Math.max(0, Math.min(99, Math.round(update.percent))))
+        }
 
-        if (statusData.ready && statusData.contentUrl) {
-          // console.log("Video ready with URL:", statusData.contentUrl)
-          const videoUrl = `${backendBaseUrl}${statusData.contentUrl}`
-          console.log("Video ready with URL:", videoUrl)
-          setSuccess("Video generated successfully! 🎉")
-          onVideoGenerated(videoUrl, videoTitle)
-          // onVideoGenerated(statusData.contentUrl, videoTitle)
+        // Update status message
+        if (update.step || update.status || update.message) {
+          setLoadingStep(update.step || update.status || update.message)
+        }
+
+        // Handle completion
+        if (update.status === 'completed' || update.complete) {
+          setProgressPct(100)
+          setSuccess(`${generationType === "video" ? "Video" : "Audio"} generated successfully! 🎉`)
+
+          console.log("Completion update:", update)
+
+          // Construct video URL
+          const contentUrl = update.contentUrl || update.url
+          if (contentUrl) {
+            const absoluteUrl = contentUrl.startsWith('http') ? contentUrl : `${backendBaseUrl}${contentUrl}`
+            console.log("Using contentUrl:", absoluteUrl)
+            onVideoGenerated(absoluteUrl, videoTitle)
+          } else {
+            // Fallback URL construction
+            const fallbackUrl = `${backendBaseUrl}/api/videos/job/${jobId}`
+            console.log("Using fallback URL:", fallbackUrl)
+            onVideoGenerated(fallbackUrl, videoTitle)
+          }
+
           setScript("")
           setTitle("")
-          return
+          setLoading(false)
+          eventSource.close()
+          eventSourceRef.current = null
         }
 
-        // Update loading step
-        if (stepIndex < steps.length - 1) {
-          setLoadingStep(steps[stepIndex])
-          stepIndex++
+        // Handle errors
+        if (update.status === 'failed' || update.error) {
+          setError(update.error || "Generation failed")
+          setLoading(false)
+          eventSource.close()
+          eventSourceRef.current = null
         }
-
-        attempts++
-        if (attempts >= maxAttempts) {
-          throw new Error("Video generation timed out")
-        }
-
-        // Continue polling
-        setTimeout(poll, 5000) // Check every 5 seconds
-      } catch (error) {
-        console.error("Status polling error:", error)
-        throw error
+      } catch (err) {
+        console.error("Error parsing SSE message:", err)
       }
     }
 
-    await poll()
+    eventSource.onerror = (error) => {
+      console.error("SSE error:", error)
+      setError("Lost connection to generation service")
+      setLoading(false)
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+        eventSourceRef.current = null
+      }
+    }
   }
 
   const estimateVideoLength = (text: string) => {
@@ -615,12 +629,23 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
         className={`relative overflow-hidden w-full py-4 px-6 rounded-xl font-semibold text-base flex items-center justify-center space-x-3 ${loading ? "bg-gray-700/50 cursor-not-allowed" : generationType === "video" ? "bg-gradient-to-r from-violet-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600" : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"} text-white shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 border ${generationType === "video" ? "border-violet-600/20" : "border-purple-500/20"}`}
       >
         {loading ? (
-          <div className="flex flex-col items-center space-y-2">
-            <div className="flex items-center space-x-3">
+          <div className="flex flex-col items-center space-y-3 w-full">
+            <div className="flex items-center space-x-3 w-full justify-center">
               <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
               <span>Generating Your {generationType === "video" ? "Video" : "Audio"}...</span>
             </div>
+
             {loadingStep && <span className="text-sm text-violet-200">{loadingStep}</span>}
+
+            <div className="w-full">
+              <div className="w-full bg-gray-700/30 rounded-full h-2 overflow-hidden">
+                <div className="bg-gradient-to-r from-violet-600 to-indigo-500 h-2 rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
+              </div>
+              <div className="flex justify-between text-xs text-slate-400 mt-2">
+                <span>{progressPct}%</span>
+                <span>{progressPct < 100 ? 'Working...' : 'Finalizing...'}</span>
+              </div>
+            </div>
           </div>
         ) : (
           <>

@@ -60,5 +60,6 @@ export async function fetchUserPoints(walletAddress: string): Promise<{ points?:
 export default {
   getBackendBaseUrl,
   fetchUserContent,
+  fetchGlobalStats,
   fetchUserPoints,
 }

@@ -27,15 +27,30 @@ components/
 └── wallet-provider.tsx # Solana wallet integration
 ```
 
-## Tech Stack
+## Real-Time Updates
 
-- **Framework**: Next.js 15 (App Router)
-- **Payment**: Solana Web3.js + Wallet Adapter
-- **Video**: FFmpeg
-- **AI**: Text-to-speech + script analysis
-- **UI**: Tailwind CSS + Lucide Icons
+The application uses Server-Sent Events (SSE) for real-time progress updates during content generation.
 
-## Routes
+### Webhook Endpoint
 
-- `/` - Landing page
-- `/studio` - Video generation studio (requires wallet)
+- **Endpoint**: `/api/webhooks/job-update`
+- **Purpose**: Handles both progress and completion updates from external services
+- **Payload**: Includes `status`, `progress` (percentage), `step` (current processing step)
+- **Database**: Only updates for final states (completed/failed); progress is broadcasted without persistence
+
+### Frontend Integration
+
+- **SSE Endpoint**: `/api/jobs/events?jobIds={jobId}`
+- **Updates**: Receives real-time updates like progress percentage, current step, and completion status
+- **Example**:
+  ```javascript
+  const eventSource = new EventSource(`/api/jobs/events?jobIds=${jobId}`);
+  eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.status === "progress") {
+      updateProgressBar(data.progress, data.step);
+    } else if (data.status === "completed") {
+      showCompletedVideo(data.videoId);
+    }
+  };
+  ```

@@ -79,3 +79,5 @@ Next steps / Completed items
 - Completed: `GET /api/users/:walletAddress/points` endpoint implemented in `src/usersRoute.ts`.
 - Completed: safe migration added at `migrations/001_add_trial_expires_at.sql` to add `trial_expires_at` to `users` if missing.
 - Completed: trial-expiry enforcement implemented (`expireTrialsForWallet`) and is called from `ensureUser` and the balance endpoint so expiry is applied automatically when users are touched.
+- Completed: Payment webhook handling implemented for secure credit awarding.
+- Completed: Frontend payment UI integration and user subscription management.
