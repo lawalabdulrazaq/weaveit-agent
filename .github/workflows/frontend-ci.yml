@@ -2,7 +2,7 @@ name: Frontend CI - Build, Test & Security
 
 on:
   push:
-    branches: ["dev", "master", ""]
+    branches: ["dev", "master", "speed"]
       # Add 'feat/**' here if you want to test feature branches (but you might want to limit the Push step)
 
 env:
