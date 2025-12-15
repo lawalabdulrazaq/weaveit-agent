@@ -329,14 +329,18 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
   const [success, setSuccess] = useState("")
   const [loadingStep, setLoadingStep] = useState("")
   const [progressPct, setProgressPct] = useState<number>(0)
-  const eventSourceRef = useRef<EventSource | null>(null)
+  const wsRef = useRef<WebSocket | null>(null)
+  const pollingRef = useRef<NodeJS.Timeout | null>(null)
   const wallet = useWallet()
   const { connection } = useConnection()
 
   useEffect(() => {
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
+      if (pollingRef.current) {
+        clearTimeout(pollingRef.current)
       }
     }
   }, [])
@@ -413,8 +417,8 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
         throw new Error(`No job ID received from backend`)
       }
 
-      // Set up SSE listener for real-time updates
-      setupSSEListener(jobId, videoData.title || title)
+      // Set up WebSocket listener for real-time updates
+      setupWebSocketListener(jobId, videoData.title || title)
     } catch (err: any) {
       console.error("Generation failed:", err)
       if (err.message?.includes("Wallet not connected")) {
@@ -425,95 +429,158 @@ const ScriptForm: React.FC<ScriptFormProps> = ({
         setError("Failed to generate video. Please try again.")
       }
       setLoading(false)
-      // Close SSE if open
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
-        eventSourceRef.current = null
+      // Close WS if open
+      if (wsRef.current) {
+        wsRef.current.close()
+        wsRef.current = null
+      }
+      // Clear polling
+      if (pollingRef.current) {
+        clearTimeout(pollingRef.current)
+        pollingRef.current = null
       }
     } finally {
       // Loading state is managed by SSE event handlers for async generation
     }
   }
 
-  const setupSSEListener = (jobId: string, videoTitle: string) => {
-    // Close any existing SSE connection
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close()
+  const setupWebSocketListener = (jobId: string, videoTitle: string) => {
+    // Close any existing WS connection
+    if (wsRef.current) {
+      wsRef.current.close()
     }
 
     const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
-    const eventSource = new EventSource(`${backendBaseUrl}/api/jobs/events?jobIds=${jobId}`)
-    eventSourceRef.current = eventSource
+    const wsUrl = backendBaseUrl.replace(/^http/, 'ws')
 
-    // Initialize progress
-    setProgressPct(0)
-    setLoadingStep("Queued for generation...")
+    try {
+      const ws = new WebSocket(wsUrl)
+      wsRef.current = ws
 
-    eventSource.onmessage = (event) => {
+      // Initialize progress
+      setProgressPct(0)
+      setLoadingStep("Queued for generation...")
+
+      ws.onopen = () => {
+        console.log("WebSocket connected")
+        // Subscribe to the job
+        ws.send(JSON.stringify({ action: 'subscribe', jobId }))
+      }
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          console.log("WS message:", data)
+
+          if (data.type === 'progress') {
+            setProgressPct(Math.max(0, Math.min(99, Math.round(data.progress || 0))))
+            setLoadingStep(`${data.progress || 0}% - ${data.message || 'Processing...'}`)
+          } else if (data.type === 'completed') {
+            setProgressPct(100)
+            setSuccess(`${generationType === "video" ? "Video" : "Audio"} generated successfully! 🎉`)
+
+            // Construct video URL
+            const videoUrl = `${backendBaseUrl}/api/videos/${data.videoId}`
+            onVideoGenerated(videoUrl, videoTitle)
+
+            setScript("")
+            setTitle("")
+            setLoading(false)
+            ws.close()
+            wsRef.current = null
+          } else if (data.type === 'error') {
+            setError(data.error || "Generation failed")
+            setLoading(false)
+            ws.close()
+            wsRef.current = null
+          }
+        } catch (err) {
+          console.error("Error parsing WS message:", err)
+        }
+      }
+
+      ws.onerror = (error) => {
+        console.error("WS error:", error)
+        // Fallback to polling
+        startPolling(jobId, videoTitle)
+        if (wsRef.current) {
+          wsRef.current.close()
+          wsRef.current = null
+        }
+      }
+
+      ws.onclose = () => {
+        console.log("WebSocket closed")
+        if (wsRef.current) {
+          wsRef.current = null
+        }
+      }
+
+      // Timeout to fallback to polling if WS doesn't connect quickly
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.CONNECTING) {
+          console.log("WS taking too long, falling back to polling")
+          startPolling(jobId, videoTitle)
+          if (wsRef.current) {
+            wsRef.current.close()
+            wsRef.current = null
+          }
+        }
+      }, 5000) // 5 second timeout
+
+    } catch (err) {
+      console.error("Failed to create WebSocket:", err)
+      // Fallback to polling immediately
+      startPolling(jobId, videoTitle)
+    }
+  }
+
+  const startPolling = (jobId: string, videoTitle: string) => {
+    console.log("Starting polling for job:", jobId)
+    setLoadingStep("Connecting...")
+
+    const pollStatus = async () => {
+      if (!loading) return // Stop if not loading anymore
+
       try {
-        const update = JSON.parse(event.data)
-        console.log("SSE update:", update)
-
-        // Update progress percentage (cap at 99% until completion)
-        if (typeof update.progress === 'number') {
-          setProgressPct(Math.max(0, Math.min(99, Math.round(update.progress))))
-        } else if (typeof update.percent === 'number') {
-          setProgressPct(Math.max(0, Math.min(99, Math.round(update.percent))))
+        const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
+        const statusUrl = `${backendBaseUrl}/api/videos/status/${jobId}`
+        const resp = await fetch(statusUrl)
+        if (!resp.ok) {
+          throw new Error(`Status check failed: ${resp.status}`)
         }
+        const data = await resp.json()
+        console.log("Poll status:", data)
 
-        // Update status message
-        if (update.step || update.status || update.message) {
-          setLoadingStep(update.step || update.status || update.message)
+        // Update progress if available
+        if (typeof data.progress === 'number') {
+          setProgressPct(Math.max(0, Math.min(99, Math.round(data.progress))))
         }
+        setLoadingStep(data.status || "Processing...")
 
-        // Handle completion
-        if (update.status === 'completed' || update.complete) {
+        if (data.ready) {
           setProgressPct(100)
           setSuccess(`${generationType === "video" ? "Video" : "Audio"} generated successfully! 🎉`)
 
-          console.log("Completion update:", update)
-
-          // Construct video URL
-          const contentUrl = update.contentUrl || update.url
-          if (contentUrl) {
-            const absoluteUrl = contentUrl.startsWith('http') ? contentUrl : `${backendBaseUrl}${contentUrl}`
-            console.log("Using contentUrl:", absoluteUrl)
-            onVideoGenerated(absoluteUrl, videoTitle)
-          } else {
-            // Fallback URL construction
-            const fallbackUrl = `${backendBaseUrl}/api/videos/job/${jobId}`
-            console.log("Using fallback URL:", fallbackUrl)
-            onVideoGenerated(fallbackUrl, videoTitle)
-          }
+          const videoUrl = `${backendBaseUrl}/api/videos/job/${jobId}`
+          onVideoGenerated(videoUrl, videoTitle)
 
           setScript("")
           setTitle("")
           setLoading(false)
-          eventSource.close()
-          eventSourceRef.current = null
-        }
-
-        // Handle errors
-        if (update.status === 'failed' || update.error) {
-          setError(update.error || "Generation failed")
-          setLoading(false)
-          eventSource.close()
-          eventSourceRef.current = null
+        } else {
+          // Continue polling
+          pollingRef.current = setTimeout(pollStatus, 2000)
         }
       } catch (err) {
-        console.error("Error parsing SSE message:", err)
+        console.error("Polling error:", err)
+        setError("Lost connection to generation service")
+        setLoading(false)
       }
     }
 
-    eventSource.onerror = (error) => {
-      console.error("SSE error:", error)
-      setError("Lost connection to generation service")
-      setLoading(false)
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
-        eventSourceRef.current = null
-      }
-    }
+    // Start polling
+    pollStatus()
   }
 
   const estimateVideoLength = (text: string) => {
