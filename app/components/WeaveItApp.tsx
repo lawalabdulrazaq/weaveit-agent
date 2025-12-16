@@ -27,19 +27,6 @@ import {
   Film,
   Mic,
 } from "lucide-react"
-// backend helpers imported dynamically inside the effect to avoid static resolution issues
-
-// Dynamic imports for libraries (to handle SSR compatibility)
-// let pdfjsLib: any
-// let mammoth: any
-
-// const initializeLibraries = async () => {
-//   if (typeof window !== "undefined" && !pdfjsLib) {
-//     pdfjsLib = await import("pdfjs-dist")
-//     mammoth = await import("mammoth")
-//     pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
-//   }
-// }
 
 const getBackendUrl = (path: string) => {
   const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
@@ -47,59 +34,10 @@ const getBackendUrl = (path: string) => {
     return backendBaseUrl
   }
   if (!path.startsWith("http")) {
-    // Remove trailing slash if present
     return backendBaseUrl.replace(/\/$/, "") + path
   }
   return path
 }
-
-// ============================================
-// File Content Extraction Helpers (Client-side)
-// ============================================
-
-// const extractTextFromPDF = async (file: File): Promise<string> => {
-//   try {
-//     await initializeLibraries()
-//     if (!pdfjsLib) return ""
-    
-//     const arrayBuffer = await file.arrayBuffer()
-//     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-//     let text = ""
-    
-//     for (let i = 0; i < pdf.numPages; i++) {
-//       const page = await pdf.getPage(i + 1)
-//       const textContent = await page.getTextContent()
-//       const pageText = textContent.items
-//         .map((item: any) => item.str || "")
-//         .join(" ")
-//       text += pageText + "\n"
-//     }
-    
-//     return text.trim()
-//   } catch (error) {
-//     console.error("PDF extraction failed:", error)
-//     return ""
-//   }
-// }
-
-// const extractTextFromDOCX = async (file: File): Promise<string> => {
-//   try {
-//     await initializeLibraries()
-//     if (!mammoth) return ""
-    
-//     const arrayBuffer = await file.arrayBuffer()
-//     const result = await mammoth.extractRawText({ arrayBuffer })
-//     return result.value.trim()
-//   } catch (error) {
-//     console.error("DOCX extraction failed:", error)
-//     return ""
-//   }
-// }
-
-
-// ============================================
-// GitHub Repo Import Helpers (Frontend-only)
-// ============================================
 
 // Map of known docs sites to their GitHub repositories
 const DOCS_REPO_MAP: Record<string, string> = {
@@ -111,7 +49,6 @@ const DOCS_REPO_MAP: Record<string, string> = {
   "typescript.org": "https://github.com/microsoft/TypeScript-Website",
 }
 
-// Detect URL type and normalize
 interface URLDetectionResult {
   type: "github" | "docs" | "unknown"
   url: string
@@ -123,7 +60,6 @@ const detectURLType = (url: string): URLDetectionResult => {
     const urlObj = new URL(url)
     const hostname = urlObj.hostname
 
-    // Check if it's a docs site mapping
     for (const [docsHost, repoUrl] of Object.entries(DOCS_REPO_MAP)) {
       if (hostname.includes(docsHost.split("/")[0])) {
         return {
@@ -134,7 +70,6 @@ const detectURLType = (url: string): URLDetectionResult => {
       }
     }
 
-    // Check if it's GitHub
     if (hostname === "github.com") {
       return { type: "github", url }
     }
@@ -145,7 +80,6 @@ const detectURLType = (url: string): URLDetectionResult => {
   }
 }
 
-// Parse GitHub URL to get owner and repo
 const parseGitHubURL = (url: string): { owner: string; repo: string } | null => {
   try {
     const match = url.match(/github\.com\/([^/]+)\/([^/]+)(?:\.git)?(?:\/)?$/)
@@ -158,11 +92,10 @@ const parseGitHubURL = (url: string): { owner: string; repo: string } | null => 
   }
 }
 
-// Supported file extensions for import
 const SUPPORTED_EXTENSIONS = [".md", ".mdx", ".txt", ".json", ".js", ".ts", ".tsx", ".jsx"]
-const MAX_FILE_SIZE = 500 * 1024 // 500KB per file
+const MAX_FILE_SIZE = 500 * 1024
 const MAX_TOTAL_FILES = 100
-const MAX_CONTENT_LENGTH = 100 * 1024 // 100KB total content
+const MAX_CONTENT_LENGTH = 100 * 1024
 
 interface GitHubFileNode {
   name: string
@@ -171,12 +104,6 @@ interface GitHubFileNode {
   size?: number
 }
 
-// interface GitHubTreeResponse {
-//   tree: GitHubFileNode[]
-//   truncated: boolean
-// }
-
-// Fetch GitHub repository tree recursively
 const fetchGitHubTree = async (
   owner: string,
   repo: string,
@@ -200,7 +127,6 @@ const fetchGitHubTree = async (
 
     const data = await response.json()
 
-    // Handle single file vs directory listing
     if (!Array.isArray(data)) {
       return []
     }
@@ -212,7 +138,6 @@ const fetchGitHubTree = async (
   }
 }
 
-// Fetch content of a specific file from GitHub
 const fetchGitHubFileContent = async (
   owner: string,
   repo: string,
@@ -236,7 +161,6 @@ const fetchGitHubFileContent = async (
   }
 }
 
-// Recursively extract supported files from GitHub repo
 const extractGitHubContent = async (
   owner: string,
   repo: string,
@@ -250,9 +174,7 @@ const extractGitHubContent = async (
     const tree = await fetchGitHubTree(owner, repo, basePath)
     const results: Array<{ path: string; name: string; content: string }> = []
 
-    // Process items in parallel with Promise.allSettled
     const promises = tree.map(async (item) => {
-      // Skip hidden files and unwanted directories
       if (
         item.name.startsWith(".") ||
         ["node_modules", "dist", "build", ".git", "coverage"].includes(item.name)
@@ -260,14 +182,12 @@ const extractGitHubContent = async (
         return null
       }
 
-      // If it's a directory, recurse
       if (item.type === "dir") {
         const newPath = basePath ? `${basePath}/${item.name}` : item.name
         const nestedResults = await extractGitHubContent(owner, repo, newPath, depth + 1)
         return nestedResults
       }
 
-      // If it's a supported file type and under size limit
       const isSupportedExt = SUPPORTED_EXTENSIONS.some((ext) => item.name.endsWith(ext))
       if (isSupportedExt && item.size && item.size <= MAX_FILE_SIZE) {
         const content = await fetchGitHubFileContent(owner, repo, item.path)
@@ -281,7 +201,6 @@ const extractGitHubContent = async (
 
     const settledResults = await Promise.allSettled(promises)
 
-    // Flatten results and filter nulls
     for (const settled of settledResults) {
       if (settled.status === "fulfilled" && settled.value) {
         if (Array.isArray(settled.value)) {
@@ -299,37 +218,32 @@ const extractGitHubContent = async (
   }
 }
 
-// Combine imported files into Studio sources
 const combineImportedFiles = (
   files: Array<{ path: string; name: string; content: string }>,
   repoUrl: string
 ): Array<{ name: string; type: "repo"; content: string; originUrl: string }> => {
   const grouped: Record<string, string> = {}
 
-  // Group files by directory
   for (const file of files) {
     const dir = file.path.substring(0, file.path.lastIndexOf("/")) || "root"
     const key = dir
     if (!grouped[key]) {
       grouped[key] = ""
     }
-    // Add file content with separator
     grouped[key] += `\n\n--- File: ${file.name} ---\n${file.content}`
   }
 
-  // Convert to Studio sources
   const sources: Array<{ name: string; type: "repo"; content: string; originUrl: string }> =
     Object.entries(grouped).map(([dir, content]) => ({
       name: dir === "root" ? "Repository Root" : `Folder: ${dir.split("/").pop()}`,
       type: "repo",
-      content: content.slice(0, MAX_CONTENT_LENGTH), // Limit content size
+      content: content.slice(0, MAX_CONTENT_LENGTH),
       originUrl: repoUrl,
     }))
 
   return sources
 }
 
-// Enhanced Video Display Component
 interface VideoDisplayProps {
   videoUrl: string
   title?: string
@@ -345,10 +259,8 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
   const [currentTime, setCurrentTime] = useState(0)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // Always use absolute backend URL for video
   const absoluteVideoUrl = getBackendUrl(videoUrl)
 
-  // Log when video URL changes
   useEffect(() => {
     console.log("Video URL in display component:", absoluteVideoUrl)
   }, [absoluteVideoUrl])
@@ -384,7 +296,6 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
     } else {
       try {
         await navigator.clipboard.writeText(absoluteVideoUrl)
-        // Show toast notification
         const toast = document.createElement("div")
         toast.className = "fixed top-4 right-4 bg-violet-600 text-white px-4 py-2 rounded-lg shadow-lg z-50"
         toast.textContent = "Video URL copied to clipboard!"
@@ -428,7 +339,6 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-r from-violet-600 to-indigo-500 rounded-lg flex items-center justify-center">
@@ -440,11 +350,11 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
           </div>
         </div>
         <div className="flex items-center space-x-2">
-            <button
-              onClick={handleShare}
-              className="bg-gray-800/50 hover:bg-violet-600/20 text-white p-3 rounded-xl transition-all duration-200 hover:scale-105 backdrop-blur-sm border border-gray-700/50"
-              title="Share video"
-            >
+          <button
+            onClick={handleShare}
+            className="bg-gray-800/50 hover:bg-violet-600/20 text-white p-3 rounded-xl transition-all duration-200 hover:scale-105 backdrop-blur-sm border border-gray-700/50"
+            title="Share video"
+          >
             <Share2 className="w-5 h-5" />
           </button>
           {onClose && (
@@ -459,7 +369,6 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
         </div>
       </div>
 
-      {/* Video Container */}
       <div
         className="relative bg-black rounded-2xl overflow-hidden shadow-2xl group border border-gray-800/50"
         onMouseEnter={() => setShowControls(true)}
@@ -488,12 +397,10 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
           Your browser does not support the video tag.
         </video>
 
-        {/* Custom Controls Overlay */}
         <div
           className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-6 transition-all duration-300 ${showControls ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
         >
-          {/* Progress Bar */}
-              <div className="w-full bg-gray-700/50 rounded-full h-1 mb-4">
+          <div className="w-full bg-gray-700/50 rounded-full h-1 mb-4">
             <div
               className="bg-gradient-to-r from-violet-600 to-indigo-500 h-1 rounded-full transition-all duration-200"
               style={{ width: `${progress}%` }}
@@ -531,7 +438,6 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex flex-wrap gap-4">
         <button
           onClick={handleDownload}
@@ -553,108 +459,108 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ videoUrl, title = "Generate
   )
 }
 
-
-// Main WeaveIt App Component
 export default function WeaveItApp() {
   const { connected, disconnect, publicKey } = useWallet()
   const router = useRouter()
   const [currentVideo, setCurrentVideo] = useState<{ url: string; title: string } | null>(null)
   const [videos, setVideos] = useState<Array<{
     [x: string]: string; id: string; title: string; url: string; createdAt: string 
-}>>([])
+  }>>([])
   const [loadingVideos, setLoadingVideos] = useState(false)
   const [points, setPoints] = useState<number | null>(null)
   const [_, setTrialExpiresAt] = useState<string | null>(null)
   const [generationType, setGenerationType] = useState<"video" | "audio">("video")
-  // const { connection } = useConnection();
-  const [success, setSuccess] = useState("");
-  const [loadingStep, setLoadingStep] = useState("");
-  const [progressPct, setProgressPct] = useState(0);
+  const [success, setSuccess] = useState("")
+  const [loadingStep, setLoadingStep] = useState("")
+  const [progressPct, setProgressPct] = useState(0)
 
-  // Project state
   const [projectName, setProjectName] = useState("Untitled Project")
   const [isEditingName, setIsEditingName] = useState(false)
 
-  // Content state - merged upload + script
   const [content, setContent] = useState("")
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; type: string; content?: string }[]>([])
   const [selectedSource, setSelectedSource] = useState<{ name: string; content: string } | null>(null)
 
-  // Impromptu question state
   const [impromptuQuestion, setImpromptuQuestion] = useState("")
   const [impromptuMode, setImpromptuMode] = useState<"audio" | "video">("video")
   const [impromptuLoading, setImpromptuLoading] = useState(false)
   
-  // Import state
   const [importUrl, setImportUrl] = useState("")
   const [importLoading, setImportLoading] = useState(false)
   const [importError, setImportError] = useState("")
   const [importSuccess, setImportSuccess] = useState("")
 
-  // Generation state
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [backendError, setBackendError] = useState<string | null>(null)
 
-  // Fetch user's videos and audio when wallet connects
+  // CRITICAL FIX: Only fetch user content AFTER initial render
+  // This prevents blocking the page load with API calls
+  const [hasInitiallyFetched, setHasInitiallyFetched] = useState(false)
+
   useEffect(() => {
-    const fetchUserContent = async () => {
-      if (!connected || !publicKey) {
-        setVideos([])
-        setPoints(null)
-        setTrialExpiresAt(null)
-        return
-      }
+    // Don't fetch immediately - wait for user interaction or a delay
+    if (!connected || !publicKey || hasInitiallyFetched) return
 
-      setLoadingVideos(true)
-      try {
-        const walletAddress = publicKey.toBase58()
+    // Delay the fetch to allow page to render first
+    const timer = setTimeout(() => {
+      fetchUserContent()
+    }, 500) // Half second delay allows page to be interactive first
 
-        // Fetch content from centralized lib helper
-        try {
-          // @ts-ignore - dynamic import of local lib helper
-          const backendModule = await import("../../lib/backend")
-          const data = await backendModule.fetchUserContent(walletAddress)
-          console.log("Fetched content:", data)
+    return () => clearTimeout(timer)
+  }, [connected, publicKey, hasInitiallyFetched])
 
-          const backendBaseUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001").replace(/\/$/, "")
-
-          // Transform backend response to match our content format
-          const fetchedContent = (data?.content || []).map((item: any) => ({
-            id: item.id,
-            title: item.title,
-            url: `${backendBaseUrl}${item.url}`,
-            createdAt: item.created_at,
-            contentType: item.content_type,
-          }))
-
-          console.log("Transformed content:", fetchedContent)
-          setVideos(fetchedContent)
-
-          // Fetch points using centralized helper from same module
-          try {
-            const pointsData = await backendModule.fetchUserPoints(walletAddress)
-            setPoints(typeof pointsData.points === 'number' ? pointsData.points : null)
-            setTrialExpiresAt(pointsData.trial_expires_at || pointsData.trial_expires_at || null)
-          } catch (err) {
-            console.debug('Failed to fetch points:', err)
-            setPoints(null)
-            setTrialExpiresAt(null)
-          }
-        } catch (err) {
-          console.error("Failed to fetch content:", err)
-          // Don't clear videos on error - user may have had content loaded before
-          // Only set to empty if this is the initial load
-        }
-      } catch (error) {
-        console.error("Error fetching content:", error)
-      } finally {
-        setLoadingVideos(false)
-      }
+  const fetchUserContent = async () => {
+    if (!connected || !publicKey) {
+      setVideos([])
+      setPoints(null)
+      setTrialExpiresAt(null)
+      return
     }
 
-    fetchUserContent()
-  }, [connected, publicKey])
+    setLoadingVideos(true)
+    setHasInitiallyFetched(true)
+
+    try {
+      const walletAddress = publicKey.toBase58()
+
+      try {
+        // @ts-ignore - dynamic import
+        const backendModule = await import("../../lib/backend")
+        const data = await backendModule.fetchUserContent(walletAddress)
+        console.log("Fetched content:", data)
+
+        const backendBaseUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001").replace(/\/$/, "")
+
+        const fetchedContent = (data?.content || []).map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          url: `${backendBaseUrl}${item.url}`,
+          createdAt: item.created_at,
+          contentType: item.content_type,
+        }))
+
+        console.log("Transformed content:", fetchedContent)
+        setVideos(fetchedContent)
+
+        try {
+          const pointsData = await backendModule.fetchUserPoints(walletAddress)
+          setPoints(typeof pointsData.points === 'number' ? pointsData.points : null)
+          setTrialExpiresAt(pointsData.trial_expires_at || null)
+        } catch (err) {
+          console.debug('Failed to fetch points:', err)
+          setPoints(null)
+          setTrialExpiresAt(null)
+        }
+      } catch (err) {
+        console.error("Failed to fetch content:", err)
+      }
+    } catch (error) {
+      console.error("Error fetching content:", error)
+    } finally {
+      setLoadingVideos(false)
+    }
+  }
 
   const handleDisconnect = () => {
     disconnect()
@@ -664,7 +570,6 @@ export default function WeaveItApp() {
   const handleVideoGenerated = (videoUrl: string, title: string) => {
     console.log("Content generated with URL:", videoUrl)
     
-    // Extract content ID from URL (works for both /api/videos/ and /api/audio/)
     const contentIdMatch = videoUrl.match(/\/api\/(?:videos|audio)\/([a-f0-9-]+)/i)
     const contentId = contentIdMatch ? contentIdMatch[1] : `local-${Date.now()}`
     
@@ -675,16 +580,13 @@ export default function WeaveItApp() {
       createdAt: new Date().toISOString(),
     }
     
-    // Avoid duplicates - check if content already exists
     setVideos((prev) => {
       const existingIndex = prev.findIndex(v => v.id === contentId)
       if (existingIndex >= 0) {
-        // Update existing content
         const updated = [...prev]
         updated[existingIndex] = newContent
         return updated
       }
-      // Add new content at the beginning
       return [newContent, ...prev]
     })
     
@@ -692,7 +594,6 @@ export default function WeaveItApp() {
     console.log("Current content set to:", { url: videoUrl, title })
   }
 
-  // File input ref for uploads
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const unifiedTextareaRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -701,16 +602,16 @@ export default function WeaveItApp() {
   }
 
   const removeFile = (index: number) => {
-    setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
-  };
+    setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))
+  }
 
   const handleSelectSource = (file: any) => {
-    setSelectedSource(file);
-  };
+    setSelectedSource(file)
+  }
 
   const handleContentChange = (value: string) => {
-    setContent(value);
-  };
+    setContent(value)
+  }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -727,7 +628,6 @@ export default function WeaveItApp() {
         return
       }
       const data = await resp.json()
-      // Expect backend to return { url, title }
       const uploaded = data[0] || data
       if (uploaded && uploaded.url) {
         handleVideoGenerated(uploaded.url, uploaded.title || 'Uploaded')
@@ -735,116 +635,104 @@ export default function WeaveItApp() {
     } catch (err) {
       console.error('Upload error', err)
     } finally {
-      // reset input
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
-  // Import repo handler
-    const handleImportRepo = async () => {
-      if (!importUrl.trim()) {
-        setImportError("Please enter a repository or documentation URL")
+  const handleImportRepo = async () => {
+    if (!importUrl.trim()) {
+      setImportError("Please enter a repository or documentation URL")
+      return
+    }
+
+    setImportLoading(true)
+    setImportError("")
+    setImportSuccess("")
+
+    try {
+      const detection = detectURLType(importUrl)
+
+      if (detection.type === "unknown") {
+        setImportError("Direct docs extraction not supported yet. Paste a GitHub repo instead.")
+        setImportLoading(false)
         return
       }
-  
-      setImportLoading(true)
-      setImportError("")
-      setImportSuccess("")
-  
-      try {
-        // Detect URL type
-        const detection = detectURLType(importUrl)
-  
-        if (detection.type === "unknown") {
-          setImportError("Direct docs extraction not supported yet. Paste a GitHub repo instead.")
-          setImportLoading(false)
-          return
-        }
-  
-        // Parse GitHub URL
-        const parsed = parseGitHubURL(detection.url)
-        if (!parsed) {
-          setImportError("Invalid GitHub repository URL. Use format: https://github.com/owner/repo")
-          setImportLoading(false)
-          return
-        }
-  
-        // Fetch and extract content
-        const files = await extractGitHubContent(parsed.owner, parsed.repo)
-  
-        if (files.length === 0) {
-          setImportError("No supported files found in this repository")
-          setImportLoading(false)
-          return
-        }
-  
-        // Combine files into sources
-        const sources = combineImportedFiles(files, detection.url)
-  
-        // Add to uploaded files
-        setUploadedFiles((prev) => [...prev, ...sources])
-  
-        // Show success message
-        let successMsg = `Repository imported successfully! (${files.length} files)`
-        if (detection.message) {
-          successMsg = detection.message + ` Imported ${files.length} files.`
-        }
-        setImportSuccess(successMsg)
-  
-        // Clear input
-        setImportUrl("")
-  
-        // Clear success message after 5 seconds
-        setTimeout(() => setImportSuccess(""), 5000)
-      } catch (err) {
-        console.error("Import error:", err)
-        const errorMsg =
-          err instanceof Error && err.message.includes("Rate limit")
-            ? "GitHub API rate limit exceeded. Please try again in a few minutes."
-            : err instanceof Error
-              ? err.message
-              : "Unable to extract content from this source"
-        setImportError(errorMsg)
-      } finally {
-        setImportLoading(false)
-      }
-    }
-    
-    // Impromptu question generation
-  const handleImpromptuGenerate = async (mode: "audio" | "video") => {
-    if (!impromptuQuestion.trim()) return;
 
-    // Use unified content source
-    const previewContent = content.trim() || uploadedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n");
+      const parsed = parseGitHubURL(detection.url)
+      if (!parsed) {
+        setImportError("Invalid GitHub repository URL. Use format: https://github.com/owner/repo")
+        setImportLoading(false)
+        return
+      }
+
+      const files = await extractGitHubContent(parsed.owner, parsed.repo)
+
+      if (files.length === 0) {
+        setImportError("No supported files found in this repository")
+        setImportLoading(false)
+        return
+      }
+
+      const sources = combineImportedFiles(files, detection.url)
+
+      setUploadedFiles((prev) => [...prev, ...sources])
+
+      let successMsg = `Repository imported successfully! (${files.length} files)`
+      if (detection.message) {
+        successMsg = detection.message + ` Imported ${files.length} files.`
+      }
+      setImportSuccess(successMsg)
+
+      setImportUrl("")
+
+      setTimeout(() => setImportSuccess(""), 5000)
+    } catch (err) {
+      console.error("Import error:", err)
+      const errorMsg =
+        err instanceof Error && err.message.includes("Rate limit")
+          ? "GitHub API rate limit exceeded. Please try again in a few minutes."
+          : err instanceof Error
+            ? err.message
+            : "Unable to extract content from this source"
+      setImportError(errorMsg)
+    } finally {
+      setImportLoading(false)
+    }
+  }
+    
+  const handleImpromptuGenerate = async (mode: "audio" | "video") => {
+    if (!impromptuQuestion.trim()) return
+
+    const previewContent = content.trim() || uploadedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n")
 
     if (!previewContent.trim()) {
-      setError("No content available to answer questions about");
-      return;
+      setError("No content available to answer questions about")
+      return
     }
 
     if (!publicKey) {
-      setError("Please connect your wallet");
-      return;
+      setError("Please connect your wallet")
+      return
     }
 
-    setImpromptuLoading(true);
-    setImpromptuMode(mode);
-    setError("");
+    setImpromptuLoading(true)
+    setImpromptuMode(mode)
+    setError("")
 
     setTimeout(() => {
-      setImpromptuLoading(false);
-      setImpromptuQuestion("");
+      setImpromptuLoading(false)
+      setImpromptuQuestion("")
       const newVideo = {
         id: Date.now().toString(),
         title: impromptuQuestion.slice(0, 30) + "...",
         url: "https://example.com/video.mp4",
         type: mode,
         createdAt: new Date().toISOString()
-      };
-      setVideos([newVideo, ...videos]);
-      setCurrentVideo({ url: newVideo.url, title: newVideo.title });
-    }, 2000);
-  };
+      }
+      setVideos([newVideo, ...videos])
+      setCurrentVideo({ url: newVideo.url, title: newVideo.title })
+    }, 2000)
+  }
 
   const handleGenerate = async () => {
     const scriptContent =
