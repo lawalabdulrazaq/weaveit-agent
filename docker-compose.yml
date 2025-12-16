@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # 1. The Database (Simulates Neon)
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: weaveit_test_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d weaveit_test_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. The Backend (Stable)
+  backend:
+    # 🟢 MAKE SURE this matches the image name in your Backend Repo's deploy-prod.yml
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/weaveit-server-staging:latest
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      # Connect to the local 'db' container
+      DATABASE_URL: postgresql://testuser:testpassword@db:5432/weaveit_test_db
+      PORT: 3001
+      # Mock other keys so the server doesn't crash on startup
+      OPENAI_API_KEY: "sk-mock-key-for-testing"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 3. The Frontend (Your PR Code)
+  frontend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Point to the internal backend container
+      NEXT_PUBLIC_API_URL: http://backend:3001
+    depends_on:
+      - backend
