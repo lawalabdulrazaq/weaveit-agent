@@ -57,7 +57,7 @@
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "mammoth": "^1.11.0",
-    "next": "latest",
+    "next": "15.5.8",
     "next-themes": "latest",
     "pdfjs-dist": "^5.4.449",
     "pino-pretty": "^13.1.2",
