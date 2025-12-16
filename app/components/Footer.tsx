@@ -8,7 +8,7 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="space-y-8 xl:col-span-1">
             <div className="flex items-center space-x-3">
-              <img className="h-10 w-10 rounded-xl" src="/assets/WeavLog.jpg" alt="WeaveIt" />
+              <img className="h-10 w-10 rounded-xl" src="/assets/WeavLog.png" alt="WeaveIt" />
               <div>
                 <h3 className="text-xl font-bold bg-gradient-to-r from-weaveit-500 to-weaveit-600 bg-clip-text text-transparent">
                   WeaveIt
