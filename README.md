@@ -27,6 +27,7 @@ components/
 └── wallet-provider.tsx # Solana wallet integration
 ```
 
+<<<<<<< HEAD
 ## Real-Time Updates
 
 The application uses Server-Sent Events (SSE) for real-time progress updates during content generation.
@@ -54,3 +55,17 @@ The application uses Server-Sent Events (SSE) for real-time progress updates dur
     }
   };
   ```
+=======
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Payment**: Solana Web3.js + Wallet Adapter
+- **Video**: FFmpeg
+- **AI**: Text-to-speech + script analysis
+- **UI**: Tailwind CSS + Lucide Icons
+
+## Routes
+
+- `/` - Landing page
+- `/studio` - Video generation studio (requires wallet)
+>>>>>>> 3716a395164f458069abaf635fe2628daf51c34f

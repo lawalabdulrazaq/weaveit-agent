@@ -233,7 +233,7 @@ export default function Team() {
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
-                <img src="/team/lawal.jpg" alt="Lawal Abdulrazaq" className="w-full h-full object-cover" />
+                <img src="/logan.jpg" alt="Lawal Abdulrazaq" className="w-full h-full object-cover" />
                 {/* Scan line effect */}
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-b from-transparent via-weaveit-500/30 to-transparent"
@@ -255,7 +255,7 @@ export default function Team() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: 0.4 }}
                 >
-                  Lawal Abdulrazaq — Founder
+                  Lawal Abdulrazaq, Founder
                 </motion.h3>
                 <motion.div 
                   className="flex items-center space-x-3 mt-2"
@@ -322,7 +322,7 @@ export default function Team() {
                 whileHover={{ scale: 1.1, rotate: -5 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
-                <img src="/team/orkar.jpg" alt="Orkar A. Melch. Fabian" className="w-full h-full object-cover" />
+                <img src="/orkar.jpg" alt="Orkar A. Melch. Fabian" className="w-full h-full object-cover" />
                 {/* Scan line effect */}
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-b from-transparent via-weaveit-500/30 to-transparent"
@@ -345,7 +345,7 @@ export default function Team() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: 0.6 }}
                 >
-                  Orkar Fabian — Co-Founder
+                  Orkar Fabian, Co-Founder
                 </motion.h3>
                 <motion.div 
                   className="flex items-center space-x-3 mt-2"

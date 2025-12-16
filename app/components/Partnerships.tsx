@@ -1,8 +1,8 @@
-import Link from "next/link"
-import {
-  ArrowRight,
-  CheckCircle
-} from "lucide-react"
+// import Link from "next/link"
+// import {
+//   ArrowRight,
+//   CheckCircle
+// } from "lucide-react"
 
 export default function Partnerships() {
   return (
@@ -31,7 +31,7 @@ export default function Partnerships() {
             {/* Partner 1 - Solana */}
             <div className="flex-shrink-0 w-80 h-80 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/20 p-8 hover:border-blue-500/50 transition-all">
               <div className="w-48 h-48 flex items-center justify-center mb-6">
-                <img src="/partnerships/solana.svg" alt="Solana" className="w-full h-full object-contain" />
+                <img src="/partnerships/Solana.jpg" alt="Solana" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-2 text-center">Solana</h3>
               <p className="text-sm text-gray-400 text-center">High-performance blockchain infrastructure</p>
@@ -40,7 +40,7 @@ export default function Partnerships() {
             {/* Partner 2 - Cyrene AI */}
             <div className="flex-shrink-0 w-80 h-80 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/20 p-8 hover:border-purple-500/50 transition-all">
               <div className="w-48 h-48 flex items-center justify-center mb-6">
-                <img src="/partnerships/cyrene-ai.svg" alt="Cyrene AI" className="w-full h-full object-contain" />
+                <img src="/partnerships/Cyrene.jpg" alt="Cyrene AI" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-2 text-center">Cyrene AI</h3>
               <p className="text-sm text-gray-400 text-center">Fair launchpad for early-stage projects on Solana</p>
@@ -49,20 +49,20 @@ export default function Partnerships() {
             {/* Partner 3 - Dcodeblock */}
             <div className="flex-shrink-0 w-80 h-80 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/20 p-8 hover:border-cyan-500/50 transition-all">
               <div className="w-48 h-48 flex items-center justify-center mb-6">
-                <img src="/partnerships/dcodeblock.svg" alt="Dcodeblock" className="w-full h-full object-contain" />
+                <img src="/partnerships/Dcodeblock.jpg" alt="Dcodeblock" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-2 text-center">Dcodeblock</h3>
               <p className="text-sm text-gray-400 text-center">Powering the Builder Economy</p>
             </div>
 
             {/* Duplicate Partner 1 for seamless loop - Solana */}
-            <div className="flex-shrink-0 w-80 h-80 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/20 p-8 hover:border-blue-500/50 transition-all">
+            {/* <div className="flex-shrink-0 w-80 h-80 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/20 p-8 hover:border-blue-500/50 transition-all">
               <div className="w-48 h-48 flex items-center justify-center mb-6">
                 <img src="/partnerships/solana.svg" alt="Solana" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-2 text-center">Solana</h3>
               <p className="text-sm text-gray-400 text-center">High-performance blockchain infrastructure</p>
-            </div>
+            </div> */}
           </div>
 
           {/* Navigation dots */}

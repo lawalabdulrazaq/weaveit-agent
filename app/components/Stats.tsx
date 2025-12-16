@@ -244,10 +244,8 @@ export default function Stats() {
     completed_jobs_count?: number
     total_users?: number
   }>(null)
-  const [hasFetched, setHasFetched] = useState(false)
 
   useEffect(() => {
-    if (hasFetched) return
     let mounted = true
     const load = async () => {
       try {
@@ -264,15 +262,13 @@ export default function Stats() {
           completed_jobs_count: global.completed_jobs_count,
           total_users: global.total_users,
         })
-        setHasFetched(true)
       } catch (err) {
         console.debug("Global stats fetch failed, falling back to defaults:", err)
-        setHasFetched(true)
       }
     }
     load()
     return () => { mounted = false }
-  }, [hasFetched])
+  }, [])
 
   const formatNumber = (num: number | undefined): string => {
     if (!num) return "0";

@@ -5,10 +5,9 @@ import {
   ArrowRight,
   Sparkles,
   Zap,
-  CheckCircle
 } from "lucide-react";
 import React from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 
 function GridBackground() {
   const mouseX = useMotionValue(0);
@@ -157,7 +156,7 @@ export default function Hero() {
               
               <div className="relative space-y-6">
                 
-                <div className="flex items-center space-x-3">
+                {/* <div className="flex items-center space-x-3">
                   <motion.div 
                     className="w-3 h-3 bg-red-500 rounded-full"
                     animate={{ opacity: [1, 0.5, 1] }}
@@ -174,9 +173,9 @@ export default function Hero() {
                     transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
                   />
                   <span className="text-gray-400 text-sm ml-4">WeaveIt Studio</span>
-                </div>
+                </div> */}
 
-                <motion.div 
+                {/* <motion.div 
                   className="mt-4 flex items-center justify-center space-x-10 text-base md:text-lg text-gray-300"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -194,7 +193,7 @@ export default function Hero() {
                     <CheckCircle className="w-6 h-6 text-weaveit-400" />
                     <span className="font-medium">Professional quality</span>
                   </div>
-                </motion.div>
+                </motion.div> */}
 
                 <motion.div 
                   className="bg-gradient-to-br from-gray-900/95 to-black/95 rounded-xl p-4 border border-gray-700/40 shadow-xl"
@@ -219,11 +218,12 @@ export default function Hero() {
 
                   <div className="bg-black rounded-lg aspect-video flex items-center justify-center">
                     <video
-                      controls
+                      autoPlay
+                      muted
+                      loop
                       className="w-full h-full object-cover"
-                      poster="/placeholder.svg?height=400&width=600&text=Demo+Tutorial+Video"
                     >
-                      <source src="/demo-video.mp4" type="video/mp4" />
+                      <source src="/demo.mp4" type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
                   </div>

@@ -1,3 +1,4 @@
+// frontend, lib/backend.ts
 export const getBackendBaseUrl = (): string => {
   return (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001").replace(/\/$/, "")
 }
@@ -60,6 +61,5 @@ export async function fetchUserPoints(walletAddress: string): Promise<{ points?:
 export default {
   getBackendBaseUrl,
   fetchUserContent,
-  fetchGlobalStats,
   fetchUserPoints,
 }
