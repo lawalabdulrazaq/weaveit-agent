@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: 'Generate professional video tutorials instantly with AI. For developers, by developers.',
   generator: 'v0.app',
   icons: {
-    icon: '/icon.jpg',
+    icon: '/icon.png',
   },
 }
 
