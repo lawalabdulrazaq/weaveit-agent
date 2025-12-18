@@ -482,7 +482,6 @@ export default function WeaveItApp() {
   const [selectedSource, setSelectedSource] = useState<{ name: string; content: string } | null>(null)
 
   const [impromptuQuestion, setImpromptuQuestion] = useState("")
-  const [impromptuMode, setImpromptuMode] = useState<"audio" | "video">("video")
   const [impromptuLoading, setImpromptuLoading] = useState(false)
   
   const [importUrl, setImportUrl] = useState("")
@@ -700,7 +699,7 @@ export default function WeaveItApp() {
     }
   }
     
-  const handleImpromptuGenerate = async (mode: "audio" | "video") => {
+  const handleImpromptuGenerate = async () => {
     if (!impromptuQuestion.trim()) return
 
     const previewContent = content.trim() || uploadedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n")
@@ -716,7 +715,6 @@ export default function WeaveItApp() {
     }
 
     setImpromptuLoading(true)
-    setImpromptuMode(mode)
     setError("")
 
     setTimeout(() => {
@@ -726,7 +724,7 @@ export default function WeaveItApp() {
         id: Date.now().toString(),
         title: impromptuQuestion.slice(0, 30) + "...",
         url: "https://example.com/video.mp4",
-        type: mode,
+        type: generationType,
         createdAt: new Date().toISOString()
       }
       setVideos([newVideo, ...videos])
@@ -823,6 +821,10 @@ export default function WeaveItApp() {
           setSuccess("Completed!");
           setLoading(false);
           setLoadingStep("");
+
+          // Update points locally after generation
+          setPoints(prev => typeof prev === 'number' ? prev - (generationType === "video" ? 2 : 1) : prev);
+
           ws.close();
         }
 
@@ -1105,7 +1107,7 @@ export default function WeaveItApp() {
                   onChange={(e) => setImpromptuQuestion(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && impromptuQuestion.trim() && !impromptuLoading) {
-                      handleImpromptuGenerate("audio");
+                      handleImpromptuGenerate();
                     }
                   }}
                   placeholder="Ask a question about the content..."
@@ -1114,13 +1116,13 @@ export default function WeaveItApp() {
                 />
                 <button
                   onClick={() => {
-                    setImpromptuMode("audio");
-                    handleImpromptuGenerate("audio");
+                    setGenerationType("audio");
+                    if (impromptuQuestion.trim()) handleImpromptuGenerate();
                   }}
-                  disabled={!impromptuQuestion.trim() || impromptuLoading}
+                  disabled={impromptuLoading}
                   className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-1.5 transition"
                 >
-                  {impromptuLoading && impromptuMode === "audio" ? (
+                  {impromptuLoading && generationType === "audio" ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
                     <Mic className="w-3 h-3" />
@@ -1129,13 +1131,13 @@ export default function WeaveItApp() {
                 </button>
                 <button
                   onClick={() => {
-                    setImpromptuMode("video");
-                    handleImpromptuGenerate("video");
+                    setGenerationType("video");
+                    if (impromptuQuestion.trim()) handleImpromptuGenerate();
                   }}
-                  disabled={!impromptuQuestion.trim() || impromptuLoading}
+                  disabled={impromptuLoading}
                   className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-1.5 transition"
                 >
-                  {impromptuLoading && impromptuMode === "video" ? (
+                  {impromptuLoading && generationType === "video" ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
                     <Video className="w-3 h-3" />
@@ -1194,33 +1196,6 @@ export default function WeaveItApp() {
         <aside className="w-80 flex-shrink-0 border-l border-slate-800 bg-slate-900/50 flex flex-col">
           <div className="p-4 border-b border-slate-800 flex items-center justify-between">
             <span className="font-semibold">Studio</span>
-          </div>
-
-          <div className="p-4 border-b border-slate-800">
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setGenerationType("audio")}
-                className={`flex items-center gap-2 p-3 rounded-lg text-sm transition ${
-                  generationType === "audio"
-                    ? "bg-violet-600/20 border border-violet-500/50 text-violet-300"
-                    : "bg-slate-800 hover:bg-slate-700 text-slate-300"
-                }`}
-              >
-                <Mic className="w-4 h-4" />
-                <span>Audio</span>
-              </button>
-              <button
-                onClick={() => setGenerationType("video")}
-                className={`flex items-center gap-2 p-3 rounded-lg text-sm transition ${
-                  generationType === "video"
-                    ? "bg-violet-600/20 border border-violet-500/50 text-violet-300"
-                    : "bg-slate-800 hover:bg-slate-700 text-slate-300"
-                }`}
-              >
-                <Film className="w-4 h-4" />
-                <span>Video</span>
-              </button>
-            </div>
           </div>
 
           {currentVideo && (
