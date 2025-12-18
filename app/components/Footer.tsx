@@ -1,6 +1,11 @@
 import { Github, Twitter, Mail, FileText, Users, MessageCircle } from "lucide-react"
+import { termsContent, privacyContent, cookieContent } from "../../lib/policies"
 
-export default function Footer() {
+interface FooterProps {
+  onOpenModal?: (title: string, content: string) => void
+}
+
+export default function Footer({ onOpenModal }: FooterProps) {
   return (
     <footer className="bg-[#0a0e17] border-t border-gray-800/50">
       <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:py-20 lg:px-8">
@@ -142,28 +147,28 @@ export default function Footer() {
                 <h3 className="text-sm font-semibold text-weaveit-500 tracking-wider uppercase mb-4">Legal</h3>
                 <ul className="space-y-3">
                   <li>
-                    <a
-                      href="/privacy"
+                    <button
+                      onClick={() => onOpenModal?.("Privacy Policy", privacyContent)}
                       className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
                     >
                       Privacy Policy
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a
-                      href="/terms"
+                    <button
+                      onClick={() => onOpenModal?.("Terms of Service", termsContent)}
                       className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
                     >
                       Terms of Service
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a
-                      href="/cookies"
+                    <button
+                      onClick={() => onOpenModal?.("Cookie Policy", "Cookie Policy content goes here...")}
                       className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
                     >
                       Cookie Policy
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </div>

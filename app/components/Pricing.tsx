@@ -91,7 +91,6 @@ export default function Pricing() {
 
     try {
       if (selected.price === 0) {
-        // await awardCredits(wallet.publicKey.toString(), selected.credits, selected.id);
         setMessage("Free trial activated! Credits have been awarded to your account.");
         closeModal();
         return;
