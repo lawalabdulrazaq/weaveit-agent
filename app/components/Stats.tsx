@@ -2,12 +2,39 @@
 
 import {
   PlayCircle,
-  Zap,
   TrendingUp,
   Globe2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+ 
+// Small 3D cube component that displays the stat icon on the front face
+function Stat3D({ icon: Icon, color, iconBg }: { icon: any; color: string; iconBg: string }) {
+  return (
+    <div style={{ perspective: 700 }} className="w-full h-full">
+      <motion.div
+        animate={{ rotateY: [0, 360] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        style={{ transformStyle: "preserve-3d" }}
+        className="relative w-full h-full"
+      >
+        {/* Front face */}
+        <div
+          className={`absolute inset-0 ${iconBg} rounded-2xl flex items-center justify-center border border-white/10`}
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          <Icon className={`w-10 h-10 bg-gradient-to-br ${color} bg-clip-text text-transparent`} />
+        </div>
+
+        {/* Back face (subtle) */}
+        <div
+          className={`absolute inset-0 ${iconBg} rounded-2xl flex items-center justify-center border border-white/6`}
+          style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", opacity: 0.6 }}
+        />
+      </motion.div>
+    </div>
+  );
+}
 
 function OrbitalRingsBackground() {
   return (
@@ -240,7 +267,6 @@ export default function Stats() {
   // Add platformStats state
   const [platformStats, setPlatformStats] = useState<null | {
     count?: number
-    total_minutes?: number
     completed_jobs_count?: number
     total_users?: number
   }>(null)
@@ -258,7 +284,6 @@ export default function Stats() {
         if (!mounted) return
         setPlatformStats({
           count: global.total_videos_created,
-          total_minutes: global.total_minutes,
           completed_jobs_count: global.completed_jobs_count,
           total_users: global.total_users,
         })
@@ -286,13 +311,6 @@ export default function Stats() {
       iconBg: "bg-gradient-to-br from-blue-500/20 to-cyan-500/20"
     },
     { 
-      number: platformStats?.total_minutes !== undefined ? formatNumber(platformStats.total_minutes) : "5M+", 
-      label: "Minutes Saved", 
-      icon: Zap,
-      color: "from-yellow-500 to-orange-500",
-      iconBg: "bg-gradient-to-br from-yellow-500/20 to-orange-500/20"
-    },
-    { 
       number: platformStats?.total_users !== undefined ? formatNumber(platformStats.total_users) : "2", 
       label: "Active User", 
       icon: TrendingUp,
@@ -314,7 +332,7 @@ export default function Stats() {
       <OrbitalRingsBackground />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-3 gap-8 justify-items-center max-w-4xl mx-auto">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -356,26 +374,7 @@ export default function Stats() {
                 
                 {/* Icon background */}
                 <div className={`relative w-20 h-20 ${stat.iconBg} rounded-2xl flex items-center justify-center border border-white/10 backdrop-blur-sm`}>
-                  {/* Animated icon */}
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: index * 0.2
-                    }}
-                  >
-                    <stat.icon className={`w-10 h-10 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`} 
-                      style={{ 
-                        filter: 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.5))',
-                        stroke: 'url(#iconGradient)',
-                        strokeWidth: 0.5
-                      }}
-                    />
-                  </motion.div>
+                  <Stat3D icon={stat.icon} color={stat.color} iconBg={stat.iconBg} />
                 </div>
 
                 {/* Orbiting dots around icon */}

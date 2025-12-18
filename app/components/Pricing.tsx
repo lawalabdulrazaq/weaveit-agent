@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CheckCircle } from "lucide-react";
+import { ArrowRight, CheckCircle, X } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { purchaseWithUsdc, USE_TOKEN_2022, awardCredits } from "../../lib/payments";
@@ -57,14 +57,69 @@ function FloatingDotsBackground() {
   );
 }
 
+function SuccessNotification({ notification, onClose }: { notification: any; onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      transition={{ duration: 0.4 }}
+      className="fixed top-6 right-6 z-50 max-w-md"
+    >
+      <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-4 shadow-lg backdrop-blur-sm">
+        <div className="flex items-start gap-4">
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex-shrink-0"
+          >
+            <CheckCircle className="w-6 h-6 text-green-500" />
+          </motion.div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-white mb-1">{notification.title}</h3>
+            <p className="text-sm text-gray-300 mb-2">{notification.message}</p>
+            {notification.txHash && (
+              <div className="text-xs text-gray-400 mt-2 p-2 bg-gray-900/40 rounded border border-gray-700/50">
+                <a
+                  href={`https://explorer.solana.com/tx/${notification.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono break-all text-green-200 hover:underline"
+                >
+                  {notification.txHash}
+                </a>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function Pricing() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<any | null>(null);
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [successNotification, setSuccessNotification] = useState<{ title: string; message: string; txHash?: string } | null>(null);
+  const [notificationVisible, setNotificationVisible] = useState(true);
 
   const wallet = useWallet();
   const { connection } = useConnection();
+
+  useEffect(() => {
+    if (successNotification && notificationVisible) {
+      const timer = setTimeout(() => setNotificationVisible(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successNotification, notificationVisible]);
 
   const openModal = (tier: any) => {
     setSelected(tier);
@@ -91,14 +146,23 @@ export default function Pricing() {
 
     try {
       if (selected.price === 0) {
-        setMessage("Free trial activated! Credits have been awarded to your account.");
+        setSuccessNotification({
+          title: "Free Trial Activated! 🎉",
+          message: `${selected.credits} credits have been awarded to your account. Start creating videos now!`
+        });
+        setNotificationVisible(true);
         closeModal();
         return;
       }
 
       const sig = await purchaseWithUsdc(wallet, selected.price, connection, { useToken2022: USE_TOKEN_2022 });
       await awardCredits(wallet.publicKey.toString(), selected.credits, selected.id, sig);
-      setMessage(`Purchase successful! Credits have been awarded. Transaction: ${sig}`);
+      setSuccessNotification({
+        title: "Payment Successful! 🎉",
+        message: `${selected.credits} credits have been added to your account. You can now start creating videos!`,
+        txHash: sig
+      });
+      setNotificationVisible(true);
       closeModal();
     } catch (err: any) {
       console.error("Purchase failed", err);
@@ -416,6 +480,14 @@ export default function Pricing() {
               {message && <p className="mt-4 text-sm text-center text-gray-300">{message}</p>}
             </div>
           </div>
+        )}
+
+        {/* Success Notification */}
+        {successNotification && notificationVisible && (
+          <SuccessNotification 
+            notification={successNotification} 
+            onClose={() => setNotificationVisible(false)}
+          />
         )}
 
       </div>

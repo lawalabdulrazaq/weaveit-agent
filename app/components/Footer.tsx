@@ -108,12 +108,13 @@ export default function Footer({ onOpenModal }: FooterProps) {
                   </li>
                   <li>
                     <a
-                      href="https://github.com/weaveit-ai/examples"
+                      href="https://1drv.ms/w/c/167e180c32eab031/IQDXRDbW6UzLTLT48mLyc90fAeh6GjHID3wow4_WmcUELlQ?e=p8Ccbr"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
+                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200 flex items-center"
                     >
-                      Examples
+                      <FileText className="w-4 h-4 mr-2" />
+                      Whitepaper
                     </a>
                   </li>
                 </ul>
@@ -123,7 +124,7 @@ export default function Footer({ onOpenModal }: FooterProps) {
               <div>
                 <h3 className="text-sm font-semibold text-weaveit-500 tracking-wider uppercase mb-4">Company</h3>
                 <ul className="space-y-3">
-                  <li>
+                  {/* <li>
                     <a
                       href="/about"
                       className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200 flex items-center"
@@ -131,10 +132,10 @@ export default function Footer({ onOpenModal }: FooterProps) {
                       <Users className="w-4 h-4 mr-2" />
                       About
                     </a>
-                  </li>
+                  </li> */}
                   <li>
                     <a
-                      href="mailto:temitopelawal925@gmail.com"
+                      href="mailto:weaveitagent@gmail.com"
                       className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200 flex items-center"
                     >
                       <MessageCircle className="w-4 h-4 mr-2" />
@@ -160,14 +161,6 @@ export default function Footer({ onOpenModal }: FooterProps) {
                       className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
                     >
                       Terms of Service
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => onOpenModal?.("Cookie Policy", "Cookie Policy content goes here...")}
-                      className="text-base text-gray-300 hover:text-weaveit-500 transition-colors duration-200"
-                    >
-                      Cookie Policy
                     </button>
                   </li>
                 </ul>
