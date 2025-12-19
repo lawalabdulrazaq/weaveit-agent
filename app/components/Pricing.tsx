@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+// Link removed; enterprise card will use mailto link
 import { ArrowRight, CheckCircle, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -104,6 +104,27 @@ function SuccessNotification({ notification, onClose }: { notification: any; onC
 }
 
 export default function Pricing() {
+  const enterpriseTier = {
+    id: "enterprise",
+    price: null,
+    title: "Enterprise",
+    credits: null,
+    monthly: false,
+    description: "Custom pricing for organizations",
+    features: [
+      "Unlimited generation",
+      "Unlimited ingestion",
+      "Custom voice cloning",
+      "60+ languages",
+      "Fastest GPU priority",
+      "Admin dashboard",
+      "SSO integration",
+      "API access",
+      "SLA guarantees",
+      "Dedicated support",
+    ],
+    best_for: "Enterprises, dev teams",
+  } as const;
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<any | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -431,20 +452,45 @@ export default function Pricing() {
           </motion.div>
         </div>
 
-        <motion.div 
-          className="mt-12 text-center"
+        <motion.div
+          className="mt-12 flex justify-center"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          <p className="text-gray-400 mb-4">Need a custom solution?</p>
-          <Link
-            href="/pricing"
-            className="inline-flex items-center px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-all border border-gray-700"
-          >
-            View Enterprise Plans
-          </Link>
+          <div className="w-full">
+            <div className="rounded-2xl p-6 bg-gradient-to-br from-weaveit-500/10 to-weaveit-600/5 border border-weaveit-500/30">
+              <div className="flex items-center justify-between gap-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-white">{enterpriseTier.title}</h3>
+                  <p className="text-gray-400 mt-1">{enterpriseTier.description}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-gray-400">Best for</div>
+                  <div className="text-white font-medium">{enterpriseTier.best_for}</div>
+                </div>
+              </div>
+
+              <ul className="mt-4 grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-sm text-gray-300">
+                {enterpriseTier.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-weaveit-400 flex-shrink-0" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6 flex items-center gap-3 justify-end">
+                <a
+                  href="mailto:weaveitagent@gmail.com?subject=Enterprise%20Pricing%20Inquiry"
+                  className="inline-flex items-center px-6 py-3 bg-weaveit-500 hover:bg-weaveit-600 text-white rounded-lg font-medium transition-all border border-weaveit-600"
+                >
+                  Contact Sales
+                </a>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Payment Modal */}
