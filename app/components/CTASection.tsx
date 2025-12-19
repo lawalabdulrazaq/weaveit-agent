@@ -1,8 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+
+function ThunderIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <img
+      src="/thund.svg"
+      alt="Thunder"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
 
 function OrbitalRingsBackground() {
   return (
@@ -302,7 +313,7 @@ export default function CTASection() {
                 animate={{ rotate: [0, 360] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               >
-                <Zap className="w-5 h-5 mr-2 relative z-10" />
+                <ThunderIcon className="w-5 h-5 mr-2 relative z-10" />
               </motion.div>
               <span className="relative z-10">Start Creating Now</span>
               <motion.div

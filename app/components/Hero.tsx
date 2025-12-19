@@ -4,10 +4,20 @@ import Link from "next/link";
 import {
   ArrowRight,
   Sparkles,
-  Zap,
 } from "lucide-react";
 import React from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
+
+function ThunderIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <img
+      src="/thund.svg"
+      alt="Thunder"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
 
 function GridBackground() {
   const mouseX = useMotionValue(0);
@@ -134,7 +144,7 @@ export default function Hero() {
                   href="/studio"
                   className="inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700 text-white font-bold text-lg rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  <Zap className="w-5 h-5 mr-3" />
+                  <ThunderIcon className="w-5 h-5 mr-3" />
                   Start Creating
                   <ArrowRight className="w-5 h-5 ml-3" />
                 </Link>

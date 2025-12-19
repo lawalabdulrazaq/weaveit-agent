@@ -4,10 +4,20 @@ import {
   Code,
   Video,
   Sparkles,
-  Zap,
   Users
 } from "lucide-react";
 import { motion } from "framer-motion";
+
+function ThunderIcon({ className = "w-6 h-6" }: { className?: string }) {
+  return (
+    <img
+      src="/thund.svg"
+      alt="Thunder"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
 
 function HexagonalMeshBackground() {
   // Generate hexagonal grid positions
@@ -263,7 +273,7 @@ export default function Products() {
           <div className="grid md:grid-cols-2 gap-8">
             {[
               {
-                icon: Zap,
+                icon: () => <ThunderIcon className="w-6 h-6" />,
                 title: "Discounted Purchases with Tokens",
                 description: "Anyone using the WeaveIt Token to pay for subscriptions at the $10 tier or above receives",
                 highlight: "30% off",
@@ -296,7 +306,11 @@ export default function Products() {
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.6 }}
                   >
-                    <item.icon className="w-6 h-6 text-weaveit-400" />
+                    {typeof item.icon === 'function' && item.icon.name === 'ThunderIcon' ? (
+                      <item.icon className="w-6 h-6" />
+                    ) : (
+                      <item.icon className="w-6 h-6 text-weaveit-400" />
+                    )}
                   </motion.div>
                   <div>
                     <h4 className="text-xl font-semibold text-white mb-2">{item.title}</h4>

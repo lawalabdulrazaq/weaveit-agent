@@ -2,7 +2,18 @@
 
 import { useState, useEffect, useTransition } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { Menu, X, Home, Zap } from "lucide-react"
+import { Menu, X, Home } from "lucide-react"
+
+function ThunderIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <img
+      src="/thund.svg"
+      alt="Thunder"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -115,7 +126,7 @@ export default function Navbar() {
                       : "bg-gradient-to-r from-weaveit-500 to-weaveit-600 hover:from-weaveit-600 hover:to-weaveit-700 text-white transform hover:scale-105"
                   } ${isPending || isNavigatingToStudio ? "opacity-70 cursor-wait" : ""}`}
                 >
-                  <Zap className="w-4 h-4" />
+                  <ThunderIcon className="w-4 h-4" />
                   <span>{isNavigatingToStudio ? "Loading..." : "Launch Studio"}</span>
                 </button>
               </div>
@@ -177,7 +188,7 @@ export default function Navbar() {
                 isPending || isNavigatingToStudio ? "opacity-70 cursor-wait" : ""
               }`}
             >
-              <Zap className="w-4 h-4 inline mr-2" />
+              <ThunderIcon className="w-4 h-4 inline mr-2" />
               {isNavigatingToStudio ? "Loading..." : "Launch Studio"}
             </button>
             <button
@@ -198,7 +209,7 @@ export default function Navbar() {
             <div className="flex flex-col items-center space-y-4">
               <div className="relative">
                 <div className="w-16 h-16 border-4 border-weaveit-500/30 border-t-weaveit-500 rounded-full animate-spin"></div>
-                <Zap className="w-6 h-6 text-weaveit-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                <ThunderIcon className="w-6 h-6 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
               </div>
               <div className="text-center">
                 <p className="text-white font-semibold text-lg">Launching Studio</p>
