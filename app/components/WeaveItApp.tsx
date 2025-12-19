@@ -29,12 +29,18 @@ import {
 } from "lucide-react"
 
 const getBackendUrl = (path: string) => {
-  const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
+  // Prefer same-origin API routes when path is an /api route so the app
+  // can run with a single Next.js server. If an explicit NEXT_PUBLIC_BACKEND_URL
+  // is provided (non-empty), it will be used for external endpoints.
+  const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || ""
   if (!path || typeof path !== 'string') {
-    return backendBaseUrl
+    return backendBaseUrl || ''
   }
-  if (!path.startsWith("http")) {
-    return backendBaseUrl.replace(/\/$/, "") + path
+  // Keep relative API routes on the same origin
+  if (path.startsWith('/api')) return path
+
+  if (!path.startsWith('http')) {
+    return (backendBaseUrl || 'http://localhost:3001').replace(/\/$/, '') + path
   }
   return path
 }
@@ -242,6 +248,122 @@ const combineImportedFiles = (
     }))
 
   return sources
+}
+
+function countWords(text?: string) {
+  if (!text) return 0
+  const m = text.trim().match(/\S+/g)
+  return m ? m.length : 0
+}
+
+interface WordCountStatus {
+  count: number
+  category: "bad" | "good" | "better" | "outrageous"
+  label: string
+  color: string
+  bgColor: string
+  percentage: number
+  isValid: boolean
+}
+
+function analyzeWordCount(content: string, uploadedFiles: { name: string; type: string; content?: string }[]): WordCountStatus {
+  const contentWords = countWords(content)
+  const uploadedWords = uploadedFiles.reduce((sum, f) => sum + countWords(f.content), 0)
+  const totalWords = contentWords + uploadedWords
+
+  // Categories based on optimal range for main generation
+  let category: "bad" | "good" | "better" | "outrageous"
+  let label: string
+  let isValid: boolean
+
+  // If no content, show neutral state (require at least some content)
+  if (totalWords === 0) {
+    category = "good"
+    label = "Add content"
+    isValid = false
+  } else if (totalWords < 1500) {
+    // Low counts are allowed — no "Too short" warnings
+    category = "good"
+    label = "Adequate"
+    isValid = true
+  } else if (totalWords < 5000) {
+    category = "better"
+    label = "Optimal"
+    isValid = true
+  } else {
+    // Only warn/block when content is excessive
+    category = "outrageous"
+    label = "Excessive"
+    isValid = false
+  }
+
+  const color = {
+    bad: "text-red-400",
+    good: totalWords === 0 ? "text-slate-400" : "text-yellow-400",
+    better: "text-green-400",
+    outrageous: "text-red-400",
+  }[category]
+
+  const bgColor = {
+    bad: "bg-red-500/10 border-red-500/30",
+    good: totalWords === 0 ? "bg-slate-500/10 border-slate-500/30" : "bg-yellow-500/10 border-yellow-500/30",
+    better: "bg-green-500/10 border-green-500/30",
+    outrageous: "bg-red-500/10 border-red-500/30",
+  }[category]
+
+  const percentage = Math.min((totalWords / 5000) * 100, 100)
+
+  return { count: totalWords, category, label, color, bgColor, percentage, isValid }
+}
+
+function analyzeImpromptuWordCount(content: string, uploadedFiles: { name: string; type: string; content?: string }[]): WordCountStatus {
+  const contentWords = countWords(content)
+  const uploadedWords = uploadedFiles.reduce((sum, f) => sum + countWords(f.content), 0)
+  const totalWords = contentWords + uploadedWords
+
+  // Stricter limits for impromptu (lightweight, quick generation)
+  let category: "bad" | "good" | "better" | "outrageous"
+  let label: string
+  let isValid: boolean
+
+  // If no content, show neutral state (require at least some content)
+  if (totalWords === 0) {
+    category = "good"
+    label = "Good"
+    isValid = false
+  } else if (totalWords < 1000) {
+    // Low counts are acceptable for impromptu/quick help
+    category = "good"
+    label = "Good"
+    isValid = true
+  } else if (totalWords < 2000) {
+    category = "better"
+    label = "Optimal"
+    isValid = true
+  } else {
+    // Only warn/block when content is excessive for quick help
+    category = "outrageous"
+    label = "Too much"
+    isValid = false
+  }
+
+  const color = {
+    bad: "text-red-400",
+    good: totalWords === 0 ? "text-slate-400" : "text-yellow-400",
+    better: "text-green-400",
+    outrageous: "text-red-400",
+  }[category]
+
+  const bgColor = {
+    bad: "bg-red-500/10 border-red-500/30",
+    good: totalWords === 0 ? "bg-slate-500/10 border-slate-500/30" : "bg-yellow-500/10 border-yellow-500/30",
+    better: "bg-green-500/10 border-green-500/30",
+    outrageous: "bg-red-500/10 border-red-500/30",
+  }[category]
+
+  const percentage = Math.min((totalWords / 2000) * 100, 100)
+
+  return { count: totalWords, category, label, color, bgColor, percentage, isValid }
 }
 
 interface VideoDisplayProps {
@@ -492,6 +614,12 @@ export default function WeaveItApp() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [backendError, setBackendError] = useState<string | null>(null)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  const showComingSoon = (msg: string) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(null), 2500)
+  }
 
   // CRITICAL FIX: Only fetch user content AFTER initial render
   // This prevents blocking the page load with API calls
@@ -537,6 +665,7 @@ export default function WeaveItApp() {
           url: `${backendBaseUrl}${item.url}`,
           createdAt: item.created_at,
           contentType: item.content_type,
+          type: item.content_type && typeof item.content_type === 'string' && item.content_type.includes('audio') ? 'audio' : 'video',
         }))
 
         console.log("Transformed content:", fetchedContent)
@@ -566,7 +695,7 @@ export default function WeaveItApp() {
     setCurrentVideo(null)
   }
 
-  const handleVideoGenerated = (videoUrl: string, title: string) => {
+  const handleVideoGenerated = (videoUrl: string, title: string, type: "video" | "audio" = "video") => {
     console.log("Content generated with URL:", videoUrl)
     
     const contentIdMatch = videoUrl.match(/\/api\/(?:videos|audio)\/([a-f0-9-]+)/i)
@@ -576,6 +705,7 @@ export default function WeaveItApp() {
       id: contentId,
       title,
       url: videoUrl,
+      type,
       createdAt: new Date().toISOString(),
     }
     
@@ -616,20 +746,79 @@ export default function WeaveItApp() {
     const files = e.target.files
     if (!files || files.length === 0) return
     try {
-      const form = new FormData()
-      Array.from(files).forEach((f) => form.append('files', f))
-      const resp = await fetch(getBackendUrl('/api/upload'), {
-        method: 'POST',
-        body: form,
-      })
-      if (!resp.ok) {
-        console.error('Upload failed', resp.statusText)
-        return
+      const supportedTextExt = [
+        '.txt', '.md', '.mdx', '.json', '.csv', '.js', '.ts', '.jsx', '.tsx'
+      ]
+
+      const toAdd: { name: string; type: string; content?: string; originUrl?: string }[] = []
+
+      const uploads: File[] = []
+
+      for (const f of Array.from(files)) {
+        const lower = f.name.toLowerCase()
+        const ext = lower.includes('.') ? lower.substring(lower.lastIndexOf('.')) : ''
+
+        if (supportedTextExt.includes(ext)) {
+          try {
+            const text = await f.text()
+            toAdd.push({ name: f.name, type: 'file', content: text })
+          } catch (e) {
+            // fallback to upload if reading fails
+            uploads.push(f)
+          }
+        } else if (ext === '.pdf' || ext === '.docx' || ext === '.doc') {
+          // attempt server-side extraction for binaries
+          uploads.push(f)
+        } else {
+          // unknown binary - upload to backend so user can still ingest or download later
+          uploads.push(f)
+        }
       }
-      const data = await resp.json()
-      const uploaded = data[0] || data
-      if (uploaded && uploaded.url) {
-        handleVideoGenerated(uploaded.url, uploaded.title || 'Uploaded')
+
+      // Add client-read files to state first
+      if (toAdd.length > 0) {
+        setUploadedFiles((prev) => [...prev, ...toAdd.map(t => ({ name: t.name, type: t.type, content: t.content }))])
+      }
+
+      // If there are binary files, upload them to backend which may perform extraction
+      if (uploads.length > 0) {
+        const form = new FormData()
+        uploads.forEach((f) => form.append('files', f))
+        const resp = await fetch(getBackendUrl('/api/upload'), {
+          method: 'POST',
+          body: form,
+        })
+        if (!resp.ok) {
+          // Read response body for better diagnostics
+          let bodyText = ''
+          try {
+            bodyText = await resp.text()
+          } catch (e) {
+            /* ignore */
+          }
+          let parsedBody: any = null
+          try {
+            parsedBody = JSON.parse(bodyText)
+          } catch (e) {
+            parsedBody = bodyText
+          }
+          console.error('Upload failed', { status: resp.status, statusText: resp.statusText, body: parsedBody })
+          setImportError(`Upload failed: ${parsedBody?.error || parsedBody || resp.statusText || resp.status}`)
+        } else {
+          const data = await resp.json()
+          const items = Array.isArray(data) ? data : [data]
+          for (const uploaded of items) {
+            // backend may return extracted text in `content` or `extracted_text` or similar
+            const extracted = uploaded.content || uploaded.extracted_text || uploaded.text || null
+            const name = uploaded.filename || uploaded.name || (uploaded.url ? uploaded.url.split('/').pop() : 'Uploaded')
+            if (extracted) {
+              setUploadedFiles((prev) => [...prev, { name, type: 'file', content: extracted }])
+            } else if (uploaded.url) {
+              // fallback: store a reference so user can see the source
+              setUploadedFiles((prev) => [...prev, { name: name, type: 'file', content: `Uploaded file available at ${uploaded.url}` }])
+            }
+          }
+        }
       }
     } catch (err) {
       console.error('Upload error', err)
@@ -709,6 +898,19 @@ export default function WeaveItApp() {
       return
     }
 
+    // Check impromptu word count validity (only block if empty or too large)
+    const impromptuStatus = analyzeImpromptuWordCount(content, uploadedFiles)
+    if (!impromptuStatus.isValid) {
+      if (impromptuStatus.count === 0) {
+        setError("No content available to answer questions about");
+        return;
+      }
+      if (impromptuStatus.category === "outrageous") {
+        setError(`Content is too long (${impromptuStatus.count.toLocaleString()} words). Limit: 2,000 words. Use main generation for longer content.`);
+        return;
+      }
+    }
+
     if (!publicKey) {
       setError("Please connect your wallet")
       return
@@ -732,7 +934,9 @@ export default function WeaveItApp() {
     }, 2000)
   }
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (explicitGenType?: "video" | "audio") => {
+    const genType = explicitGenType ?? generationType;
+
     const scriptContent =
       content.trim() ||
       uploadedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n");
@@ -740,6 +944,18 @@ export default function WeaveItApp() {
     if (!scriptContent) {
       setError("Please add content or sources");
       return;
+    }
+
+    // Check word count validity (only block if empty or too large)
+    if (!wordCountStatus.isValid) {
+      if (wordCountStatus.count === 0) {
+        setError("Please add content or sources");
+        return;
+      }
+      if (wordCountStatus.category === "outrageous") {
+        setError(`Content exceeds 5,000 word limit (${wordCountStatus.count.toLocaleString()} words). Please reduce content.`);
+        return;
+      }
     }
 
     if (!publicKey) {
@@ -758,10 +974,7 @@ export default function WeaveItApp() {
         scriptContent.slice(0, 50).trim() +
         (scriptContent.length > 50 ? "..." : "");
 
-      const endpoint =
-        generationType === "audio"
-          ? "/api/generate/audio"
-          : "/api/generate";
+      const endpoint = genType === "audio" ? "/api/generate/audio" : "/api/generate";
 
       const backendBaseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
@@ -812,18 +1025,15 @@ export default function WeaveItApp() {
           setProgressPct(100);
 
           const contentId = data.videoId || data.audioId;
-          const contentUrl =
-            generationType === "audio"
-              ? `${backendBaseUrl}/api/audio/${contentId}`
-              : `${backendBaseUrl}/api/videos/${contentId}`;
+          const contentUrl = genType === "audio" ? `${backendBaseUrl}/api/audio/${contentId}` : `${backendBaseUrl}/api/videos/${contentId}`;
 
-          handleVideoGenerated(contentUrl, title);
+          handleVideoGenerated(contentUrl, title, genType);
           setSuccess("Completed!");
           setLoading(false);
           setLoadingStep("");
 
           // Update points locally after generation
-          setPoints(prev => typeof prev === 'number' ? prev - (generationType === "video" ? 2 : 1) : prev);
+          setPoints(prev => typeof prev === 'number' ? prev - (genType === "video" ? 2 : 1) : prev);
 
           ws.close();
         }
@@ -848,6 +1058,10 @@ export default function WeaveItApp() {
       setLoadingStep("");
     }
   };
+
+  // Calculate word count for display
+  const wordCountStatus = analyzeWordCount(content, uploadedFiles)
+  const impromptuStatus = analyzeImpromptuWordCount(content, uploadedFiles)
 
 
   // Wallet not connected - show connect prompt
@@ -922,6 +1136,14 @@ export default function WeaveItApp() {
         </div>
       )}
 
+      {toastMessage && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="bg-violet-600 text-white px-4 py-2 rounded-lg shadow-lg">
+            {toastMessage}
+          </div>
+        </div>
+      )}
+
       {/* Main 3-Panel Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Sources */}
@@ -930,7 +1152,7 @@ export default function WeaveItApp() {
             <div className="flex items-center justify-between mb-3">
               <span className="font-semibold">Sources</span>
               <button onClick={() => fileInputRef.current?.click()} className="p-1.5 rounded-lg hover:bg-slate-800">
-                <Plus className="w-4 h-4" />
+                {/* <Plus className="w-4 h-4" /> */}
               </button>
             </div>
             <button
@@ -1041,7 +1263,7 @@ export default function WeaveItApp() {
         <main className="flex-1 flex flex-col bg-slate-950">
           <div className="p-4 border-b border-slate-800 flex items-center justify-between">
             <span className="font-semibold">Chat</span>
-            <button className="p-1.5 rounded-lg hover:bg-slate-800">
+            <button onClick={() => showComingSoon('Settings coming soon')} className="p-1.5 rounded-lg hover:bg-slate-800">
               <Settings className="w-4 h-4" />
             </button>
           </div>
@@ -1106,7 +1328,7 @@ export default function WeaveItApp() {
                   value={impromptuQuestion}
                   onChange={(e) => setImpromptuQuestion(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && impromptuQuestion.trim() && !impromptuLoading) {
+                    if (e.key === "Enter" && impromptuQuestion.trim() && !impromptuLoading && impromptuStatus.isValid) {
                       handleImpromptuGenerate();
                     }
                   }}
@@ -1116,11 +1338,13 @@ export default function WeaveItApp() {
                 />
                 <button
                   onClick={() => {
-                    setGenerationType("audio");
+                    const t: "audio" | "video" = "audio";
+                    setGenerationType(t);
                     if (impromptuQuestion.trim()) handleImpromptuGenerate();
                   }}
-                  disabled={impromptuLoading}
-                  className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-1.5 transition"
+                  disabled={impromptuLoading || !impromptuStatus.isValid}
+                  title={!impromptuStatus.isValid ? (impromptuStatus.category === "outrageous" ? "Content too long for Quick Help (max 2,000 words)" : "Add content") : ""}
+                  className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-1.5 transition"
                 >
                   {impromptuLoading && generationType === "audio" ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -1131,11 +1355,13 @@ export default function WeaveItApp() {
                 </button>
                 <button
                   onClick={() => {
-                    setGenerationType("video");
+                    const t: "audio" | "video" = "video";
+                    setGenerationType(t);
                     if (impromptuQuestion.trim()) handleImpromptuGenerate();
                   }}
-                  disabled={impromptuLoading}
-                  className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-1.5 transition"
+                  disabled={impromptuLoading || !impromptuStatus.isValid}
+                  title={!impromptuStatus.isValid ? (impromptuStatus.category === "outrageous" ? "Content too long for Quick Help (max 2,000 words)" : "Add content") : ""}
+                  className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-1.5 transition"
                 >
                   {impromptuLoading && generationType === "video" ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -1148,15 +1374,24 @@ export default function WeaveItApp() {
 
               {/* Bottom Action Bar - Main Generation */}
               <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-700">
-                <div className="text-xs text-slate-500 flex items-center gap-3">
-                  {uploadedFiles.length > 0 && <span>{uploadedFiles.length} source(s)</span>}
+                <div className="flex-1 flex items-center gap-3">
+                  <div className={`px-3 py-1.5 rounded-lg border text-xs font-semibold ${wordCountStatus.bgColor} ${wordCountStatus.color}`}>
+                    <div className="flex items-center gap-1">
+                      <span>{wordCountStatus.count.toLocaleString()} words</span>
+                      <span>•</span>
+                      <span>{wordCountStatus.label}</span>
+                    </div>
+                  </div>
+                  {uploadedFiles.length > 0 && <span className="text-xs text-slate-500">{uploadedFiles.length} source(s)</span>}
                 </div>
                 <button
-                  onClick={handleGenerate}
-                  disabled={loading || (content.trim().length === 0 && uploadedFiles.length === 0)}
+                  onClick={() => handleGenerate()}
+                  disabled={loading || (content.trim().length === 0 && uploadedFiles.length === 0) || !wordCountStatus.isValid}
                   className={`px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition ${
                     loading
                       ? "bg-gray-700/50 cursor-not-allowed"
+                      : !wordCountStatus.isValid
+                        ? "bg-gray-700/50 cursor-not-allowed"
                       : generationType === "video"
                         ? "bg-gradient-to-r from-violet-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600"
                         : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
@@ -1246,7 +1481,7 @@ export default function WeaveItApp() {
           </div>
 
           <div className="p-4 border-t border-slate-800">
-            <button className="w-full py-2 px-3 rounded-lg border border-slate-600 text-sm text-slate-400 hover:border-violet-500 hover:text-violet-400 flex items-center justify-center gap-2">
+            <button onClick={() => showComingSoon('Add note coming soon')} className="w-full py-2 px-3 rounded-lg border border-slate-600 text-sm text-slate-400 hover:border-violet-500 hover:text-violet-400 flex items-center justify-center gap-2">
               <FileText className="w-4 h-4" /> Add note
             </button>
           </div>
