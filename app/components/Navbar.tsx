@@ -14,6 +14,16 @@ function ThunderIcon({ className = "w-4 h-4" }: { className?: string }) {
     />
   )
 }
+function HomeIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <img
+      src="/home.png"
+      alt="Home"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -90,7 +100,7 @@ export default function Navbar() {
                       : "text-gray-300 hover:text-weaveit-500 hover:bg-weaveit-500/5"
                   }`}
                 >
-                  <Home className="w-4 h-4 inline mr-2" />
+                  <HomeIcon className="w-7 h-7 inline mr-2" />
                   Home
                 </button>
                 <a
@@ -157,7 +167,7 @@ export default function Navbar() {
                   : "text-white hover:text-weaveit-500 hover:bg-gray-800/50"
               }`}
             >
-              <Home className="w-4 h-4 inline mr-2" />
+              <HomeIcon className="w-7 h-7 inline mr-2" />
               Home
             </button>
             <a

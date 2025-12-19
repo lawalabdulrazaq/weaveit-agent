@@ -81,7 +81,7 @@ function SuccessNotification({ notification, onClose }: { notification: any; onC
             {notification.txHash && (
               <div className="text-xs text-gray-400 mt-2 p-2 bg-gray-900/40 rounded border border-gray-700/50">
                 <a
-                  href={`https://explorer.solana.com/tx/${notification.txHash}`}
+                  href={`https://solscan.io/tx/${notification.txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono break-all text-green-200 hover:underline"
@@ -523,7 +523,7 @@ export default function Pricing() {
                 <button onClick={closeModal} className="inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold border border-gray-700 text-white bg-transparent">Cancel</button>
               </div>
 
-              {message && <p className="mt-4 text-sm text-center text-gray-300">{message}</p>}
+              {message && <p className="mt-4 text-sm text-center text-gray-300 break-all whitespace-pre-wrap">{message}</p>}
             </div>
           </div>
         )}

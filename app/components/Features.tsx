@@ -1,7 +1,40 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Code, Video, Download } from "lucide-react";
+
+
+function CodeIcon({ className = "w-full h-full" }: { className?: string }) {
+  return (
+    <img
+      src="/code.png"
+      alt="Code icon"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
+
+function DownloadIcon({ className = "w-full h-full" }: { className?: string }) {
+  return (
+    <img
+      src="/download.png"
+      alt="Download icon"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
+
+function VideoIcon({ className = "w-full h-full" }: { className?: string }) {
+  return (
+    <img
+      src="/video.png"
+      alt="Video icon"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
 
 function ParticleNetworkBackground() {
   // Generate random particle positions
@@ -208,7 +241,7 @@ export default function Features() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[
             {
-              icon: Code,
+              icon: CodeIcon,
               title: "Smart Code Analysis",
               description:
                 "AI automatically analyzes your code structure and creates logical explanations for each section.",
@@ -216,7 +249,7 @@ export default function Features() {
               delay: 0.1,
             },
             {
-              icon: Video,
+              icon: VideoIcon,
               title: "Automatic Video Creation",
               description:
                 "Generate human-like narration and combine code slides, narration, and visuals into tutorials.",
@@ -224,7 +257,7 @@ export default function Features() {
               delay: 0.2,
             },
             {
-              icon: Download,
+              icon: DownloadIcon,
               title: "Multiple Formats",
               description:
                 "Export in various formats and resolutions. Perfect for YouTube, courses, or documentation.",

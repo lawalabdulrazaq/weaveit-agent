@@ -1,18 +1,72 @@
 "use client";
 
 import {
-  Code,
   Video,
   Sparkles,
   Users
 } from "lucide-react";
 import { motion } from "framer-motion";
 
+function CodeIcon({ className = "w-full h-full" }: { className?: string }) {
+  return (
+    <img
+      src="/code.png"
+      alt="Code"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
+
+function BoardIcon({ className = "w-full h-full" }: { className?: string }) {
+  return (
+    <img
+      src="/boarding.png"
+      alt="Board"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
+
+function AutomateIcon({ className = "w-6 h-6" }: { className?: string }) {
+  return (
+    <img
+      src="/automate.png"
+      alt="Automate"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
+
+function ProductionIcon({ className = "w-6 h-6" }: { className?: string }) {
+  return (
+    <img
+      src="/production.png"
+      alt="Production"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
+
 function ThunderIcon({ className = "w-6 h-6" }: { className?: string }) {
   return (
     <img
       src="/thund.svg"
       alt="Thunder"
+      className={className}
+      style={{ display: "inline-block" }}
+    />
+  )
+}
+
+function GovernIcon({ className = "w-6 h-6" }: { className?: string }) {
+  return (
+    <img
+      src="/govern.png"
+      alt="Govern"
       className={className}
       style={{ display: "inline-block" }}
     />
@@ -180,7 +234,7 @@ export default function Products() {
         <div className="grid lg:grid-cols-2 gap-12 mb-16">
           {[
             {
-              icon: Code,
+              icon: CodeIcon,
               title: "Convert Content",
               description: "Code, docs, and scripts into AI-narrated tutorial videos",
               color: "text-blue-400",
@@ -189,7 +243,7 @@ export default function Products() {
               delay: 0.1,
             },
             {
-              icon: Sparkles,
+              icon: AutomateIcon,
               title: "Auto-Generate Explanations",
               description: "Clean, easy-to-understand technical explanations powered by AI",
               color: "text-weaveit-400",
@@ -198,7 +252,7 @@ export default function Products() {
               delay: 0.2,
             },
             {
-              icon: Users,
+              icon: BoardIcon,
               title: "Speed Up Onboarding",
               description: "Accelerate learning for teams, dev communities, and creators",
               color: "text-purple-400",
@@ -207,7 +261,7 @@ export default function Products() {
               delay: 0.3,
             },
             {
-              icon: Video,
+              icon: ProductionIcon,
               title: "Scale Content Production",
               description: "Produce consistent, high-quality educational content at scale",
               color: "text-pink-400",
@@ -273,14 +327,14 @@ export default function Products() {
           <div className="grid md:grid-cols-2 gap-8">
             {[
               {
-                icon: () => <ThunderIcon className="w-6 h-6" />,
+                icon: () => <ThunderIcon className="w-full h-full object-cover" />,
                 title: "Discounted Purchases with Tokens",
                 description: "Anyone using the WeaveIt Token to pay for subscriptions at the $10 tier or above receives",
                 highlight: "30% off",
                 delay: 0.5,
               },
               {
-                icon: Users,
+                icon: () => <GovernIcon className="w-full h-full object-cover" />,
                 title: "Governance Participation",
                 description: "Token holders can vote on product features, suggest improvements, and influence the roadmap. Give users a",
                 highlight: "direct voice",

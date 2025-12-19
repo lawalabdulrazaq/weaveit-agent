@@ -165,9 +165,7 @@ export default function Roadmap() {
                   <div className="bg-gradient-to-br from-blue-500/15 to-blue-600/5 rounded-2xl p-8 border border-blue-500/30 hover:border-blue-500/50 transition-all duration-300 shadow-lg">
                     <div className="flex items-start space-x-4 mb-6">
                       <div className="w-12 h-12 bg-blue-500/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" />
-                        </svg>
+                        <img src="/flowchart.png" alt="Code icon" className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <h3 className="text-2xl font-bold text-white mb-1">Core Product Foundation</h3>
@@ -232,9 +230,7 @@ export default function Roadmap() {
                   <div className="bg-gradient-to-br from-weaveit-500/15 to-weaveit-600/5 rounded-2xl p-8 border border-weaveit-500/30 hover:border-weaveit-500/50 transition-all duration-300 shadow-lg">
                     <div className="flex items-start space-x-4 mb-6">
                       <div className="w-12 h-12 bg-weaveit-500/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-weaveit-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
+                        <img src="/code.png" alt="Code icon" className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <h3 className="text-2xl font-bold text-white mb-1">Intelligence & Advanced Presentation</h3>
@@ -305,9 +301,7 @@ export default function Roadmap() {
                   <div className="bg-gradient-to-br from-purple-500/15 to-purple-600/5 rounded-2xl p-8 border border-purple-500/30 hover:border-purple-500/50 transition-all duration-300 shadow-lg">
                     <div className="flex items-start space-x-4 mb-6">
                       <div className="w-12 h-12 bg-purple-500/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                        </svg>
+                        <img src="/barchart.svg" alt="Bar chart icon" className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <h3 className="text-2xl font-bold text-white mb-1">Advanced Understanding & Enterprise</h3>
@@ -366,9 +360,7 @@ export default function Roadmap() {
                   <div className="bg-gradient-to-br from-pink-500/15 to-pink-600/5 rounded-2xl p-8 border border-pink-500/30 hover:border-pink-500/50 transition-all duration-300 shadow-lg">
                     <div className="flex items-start space-x-4 mb-6">
                       <div className="w-12 h-12 bg-pink-500/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-pink-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a6 6 0 00-9-5.666V9a4 4 0 11-8 0v.666A6 6 0 004 18v1h12z" clipRule="evenodd" />
-                        </svg>
+                        <img src="/ecosystem.png" alt="Ecosystem icon" className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <h3 className="text-2xl font-bold text-white mb-1">Enterprise & Ecosystem Expansion</h3>

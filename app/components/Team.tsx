@@ -208,7 +208,7 @@ export default function Team() {
           </motion.p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8 items-start">
+        <div className="grid md:grid-cols-2 gap-8 items-stretch">
           {/* Founder 1 */}
           <motion.div
             initial={{ opacity: 0, x: -100, rotateY: -15 }}
