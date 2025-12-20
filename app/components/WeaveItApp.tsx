@@ -27,6 +27,7 @@ import {
   Film,
   Mic,
 } from "lucide-react"
+import Pricing from "./Pricing"
 
 const getBackendUrl = (path: string) => {
   // Prefer same-origin API routes when path is an /api route so the app
@@ -98,6 +99,17 @@ const parseGitHubURL = (url: string): { owner: string; repo: string } | null => 
   }
 }
 
+  const getGitHubHeaders = () => {
+    const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN || localStorage.getItem("github_token")
+    const headers: Record<string, string> = {
+      Accept: "application/vnd.github.v3+json",
+    }
+    if (token) {
+      headers.Authorization = `token ${token}`
+    }
+    return headers
+  }
+
 const SUPPORTED_EXTENSIONS = [".md", ".mdx", ".txt", ".json", ".js", ".ts", ".tsx", ".jsx"]
 const MAX_FILE_SIZE = 500 * 1024
 const MAX_TOTAL_FILES = 100
@@ -118,14 +130,14 @@ const fetchGitHubTree = async (
   try {
     const url = `https://api.github.com/repos/${owner}/${repo}/contents${path ? "/" + path : ""}`
     const response = await fetch(url, {
-      headers: { Accept: "application/vnd.github.v3+json" },
+      headers: getGitHubHeaders(),
     })
 
     if (response.status === 404) {
       throw new Error("Repository not found")
     }
     if (response.status === 403) {
-      throw new Error("Rate limit exceeded. Please try again in a few minutes.")
+      throw new Error("Rate limit exceeded. Please try again in a few minutes. You can also add a GitHub token to increase your limit.")
     }
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.statusText}`)
@@ -152,7 +164,7 @@ const fetchGitHubFileContent = async (
   try {
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`
     const response = await fetch(url, {
-      headers: { Accept: "application/vnd.github.raw+json" },
+      headers: getGitHubHeaders(),
     })
 
     if (!response.ok) {
@@ -228,22 +240,12 @@ const combineImportedFiles = (
   files: Array<{ path: string; name: string; content: string }>,
   repoUrl: string
 ): Array<{ name: string; type: "repo"; content: string; originUrl: string }> => {
-  const grouped: Record<string, string> = {}
-
-  for (const file of files) {
-    const dir = file.path.substring(0, file.path.lastIndexOf("/")) || "root"
-    const key = dir
-    if (!grouped[key]) {
-      grouped[key] = ""
-    }
-    grouped[key] += `\n\n--- File: ${file.name} ---\n${file.content}`
-  }
-
+  // Create a separate entry for each file instead of grouping by directory
   const sources: Array<{ name: string; type: "repo"; content: string; originUrl: string }> =
-    Object.entries(grouped).map(([dir, content]) => ({
-      name: dir === "root" ? "Repository Root" : `Folder: ${dir.split("/").pop()}`,
+    files.map((file) => ({
+      name: file.name,
       type: "repo",
-      content: content.slice(0, MAX_CONTENT_LENGTH),
+      content: file.content.slice(0, MAX_CONTENT_LENGTH),
       originUrl: repoUrl,
     }))
 
@@ -600,8 +602,9 @@ export default function WeaveItApp() {
   const [isEditingName, setIsEditingName] = useState(false)
 
   const [content, setContent] = useState("")
-  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; type: string; content?: string }[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; type: string; content?: string; selected?: boolean }[]>([])
   const [selectedSource, setSelectedSource] = useState<{ name: string; content: string } | null>(null)
+  const [selectedFileIndices, setSelectedFileIndices] = useState<Set<number>>(new Set())
 
   const [impromptuQuestion, setImpromptuQuestion] = useState("")
   const [impromptuLoading, setImpromptuLoading] = useState(false)
@@ -611,10 +614,14 @@ export default function WeaveItApp() {
   const [importError, setImportError] = useState("")
   const [importSuccess, setImportSuccess] = useState("")
 
+    const [githubToken, setGithubToken] = useState("")
+    const [showTokenInput, setShowTokenInput] = useState(false)
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [backendError, setBackendError] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [showPricing, setShowPricing] = useState(false)
 
   const showComingSoon = (msg: string) => {
     setToastMessage(msg)
@@ -624,6 +631,14 @@ export default function WeaveItApp() {
   // CRITICAL FIX: Only fetch user content AFTER initial render
   // This prevents blocking the page load with API calls
   const [hasInitiallyFetched, setHasInitiallyFetched] = useState(false)
+
+    // Load GitHub token from localStorage on mount
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        const savedToken = localStorage.getItem("github_token") || ""
+        setGithubToken(savedToken)
+      }
+    }, [])
 
   useEffect(() => {
     // Don't fetch immediately - wait for user interaction or a delay
@@ -695,6 +710,21 @@ export default function WeaveItApp() {
     setCurrentVideo(null)
   }
 
+    const handleSaveGitHubToken = () => {
+      if (githubToken.trim()) {
+        localStorage.setItem("github_token", githubToken)
+        setShowTokenInput(false)
+        showComingSoon("GitHub token saved successfully!")
+      }
+    }
+
+    const handleClearGitHubToken = () => {
+      localStorage.removeItem("github_token")
+      setGithubToken("")
+      setShowTokenInput(false)
+      showComingSoon("GitHub token cleared")
+    }
+
   const handleVideoGenerated = (videoUrl: string, title: string, type: "video" | "audio" = "video") => {
     console.log("Content generated with URL:", videoUrl)
     
@@ -732,6 +762,40 @@ export default function WeaveItApp() {
 
   const removeFile = (index: number) => {
     setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))
+    // Also remove from selected indices
+    setSelectedFileIndices((prev) => {
+      const newSet = new Set(prev)
+      newSet.delete(index)
+      // Adjust indices for items after the removed one
+      const adjusted = new Set<number>()
+      newSet.forEach((i) => {
+        if (i > index) adjusted.add(i - 1)
+        else adjusted.add(i)
+      })
+      return adjusted
+    })
+  }
+
+  const toggleFileSelection = (index: number) => {
+    setSelectedFileIndices((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(index)) {
+        newSet.delete(index)
+      } else {
+        newSet.add(index)
+      }
+      return newSet
+    })
+  }
+
+  const selectAllFiles = () => {
+    if (uploadedFiles.length === 0) return
+    const allIndices = new Set(uploadedFiles.map((_, i) => i))
+    setSelectedFileIndices(allIndices)
+  }
+
+  const deselectAllFiles = () => {
+    setSelectedFileIndices(new Set())
   }
 
   const handleSelectSource = (file: any) => {
@@ -891,7 +955,9 @@ export default function WeaveItApp() {
   const handleImpromptuGenerate = async () => {
     if (!impromptuQuestion.trim()) return
 
-    const previewContent = content.trim() || uploadedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n")
+    // Use only selected files
+    const selectedFiles = uploadedFiles.filter((_, index) => selectedFileIndices.has(index))
+    const previewContent = content.trim() || selectedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n")
 
     if (!previewContent.trim()) {
       setError("No content available to answer questions about")
@@ -899,7 +965,7 @@ export default function WeaveItApp() {
     }
 
     // Check impromptu word count validity (only block if empty or too large)
-    const impromptuStatus = analyzeImpromptuWordCount(content, uploadedFiles)
+    const impromptuStatus = analyzeImpromptuWordCount(content, selectedFiles)
     if (!impromptuStatus.isValid) {
       if (impromptuStatus.count === 0) {
         setError("No content available to answer questions about");
@@ -937,9 +1003,12 @@ export default function WeaveItApp() {
   const handleGenerate = async (explicitGenType?: "video" | "audio") => {
     const genType = explicitGenType ?? generationType;
 
+    // Use only selected files
+    const selectedFiles = uploadedFiles.filter((_, index) => selectedFileIndices.has(index))
+
     const scriptContent =
       content.trim() ||
-      uploadedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n");
+      selectedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n");
 
     if (!scriptContent) {
       setError("Please add content or sources");
@@ -947,13 +1016,14 @@ export default function WeaveItApp() {
     }
 
     // Check word count validity (only block if empty or too large)
-    if (!wordCountStatus.isValid) {
-      if (wordCountStatus.count === 0) {
+    const currentWordCountStatus = analyzeWordCount(content, selectedFiles)
+    if (!currentWordCountStatus.isValid) {
+      if (currentWordCountStatus.count === 0) {
         setError("Please add content or sources");
         return;
       }
-      if (wordCountStatus.category === "outrageous") {
-        setError(`Content exceeds 5,000 word limit (${wordCountStatus.count.toLocaleString()} words). Please reduce content.`);
+      if (currentWordCountStatus.category === "outrageous") {
+        setError(`Content exceeds 5,000 word limit (${currentWordCountStatus.count.toLocaleString()} words). Please reduce content.`);
         return;
       }
     }
@@ -1059,9 +1129,10 @@ export default function WeaveItApp() {
     }
   };
 
-  // Calculate word count for display
-  const wordCountStatus = analyzeWordCount(content, uploadedFiles)
-  const impromptuStatus = analyzeImpromptuWordCount(content, uploadedFiles)
+  // Calculate word count for display - use only selected files
+  const selectedFiles = uploadedFiles.filter((_, index) => selectedFileIndices.has(index))
+  const wordCountStatus = analyzeWordCount(content, selectedFiles)
+  const impromptuStatus = analyzeImpromptuWordCount(content, selectedFiles)
 
 
   // Wallet not connected - show connect prompt
@@ -1122,13 +1193,52 @@ export default function WeaveItApp() {
             <div className="text-slate-300">
               {publicKey?.toString().slice(0, 4)}...{publicKey?.toString().slice(-4)}
             </div>
-            <div className="text-xs text-violet-400">Credits: {points ?? "—"}</div>
+            <div className="flex items-center gap-2">
+              <div className="text-xs text-violet-400">Credits: {points ?? "—"}</div>
+              <button
+                onClick={() => setShowPricing(true)}
+                title="Buy credits"
+                className="text-xs px-2 py-1 bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 rounded transition"
+              >
+                Buy
+              </button>
+            </div>
           </div>
           <button onClick={handleDisconnect} className="p-2 rounded-lg border border-slate-700 hover:bg-slate-800">
             <LogOut className="w-4 h-4" />
           </button>
         </div>
       </header>
+
+      {showPricing && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setShowPricing(false)}
+        >
+          <div
+            className="max-w-4xl w-full bg-slate-900 rounded-xl shadow-xl overflow-auto max-h-[90vh] relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowPricing(false)}
+              aria-label="Close pricing"
+              className="absolute top-3 right-3 p-2 bg-slate-800 hover:bg-slate-700 rounded text-slate-300"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="p-6 overflow-auto">
+              <Pricing
+                onClose={() => setShowPricing(false)}
+                onPurchase={(credits) => {
+                  setPoints((prev) => (typeof prev === "number" ? prev + credits : credits))
+                  setShowPricing(false)
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {backendError && (
         <div className="bg-red-600/10 border-t border-b border-red-500/20 text-red-300 text-sm px-4 py-2">
@@ -1209,15 +1319,79 @@ export default function WeaveItApp() {
                   {importSuccess}
                 </div>
               )}
+                {/* GitHub Token Section */}
+                <div className="mt-2 pt-2 border-t border-slate-700">
+                  <button
+                    onClick={() => setShowTokenInput(!showTokenInput)}
+                    className="text-xs text-slate-400 hover:text-violet-400 transition"
+                  >
+                    {githubToken ? "✓ " : ""}GitHub Token {showTokenInput ? "▼" : "▶"}
+                  </button>
+                
+                  {showTokenInput && (
+                    <div className="mt-2 space-y-2">
+                      <input
+                        type="password"
+                        value={githubToken}
+                        onChange={(e) => setGithubToken(e.target.value)}
+                        placeholder="Paste your GitHub token (PAT)"
+                        className="w-full px-2 py-1 bg-slate-900/50 border border-slate-700 rounded text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                      />
+                      <p className="text-xs text-slate-500 leading-tight">
+                        Create a token at{" "}
+                        <a
+                          href="https://github.com/settings/tokens"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-violet-400 hover:underline"
+                        >
+                          github.com/settings/tokens
+                        </a>
+                        {" "}(Increases API limit to 5,000 requests/hour)
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveGitHubToken}
+                          className="flex-1 px-2 py-1 bg-violet-600 hover:bg-violet-700 rounded text-xs font-medium text-white transition"
+                        >
+                          Save
+                        </button>
+                        {githubToken && (
+                          <button
+                            onClick={handleClearGitHubToken}
+                            className="flex-1 px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium text-white transition"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
             </div>
           </div>
 
           {uploadedFiles.length > 0 && (
-            <div className="px-4 py-2 border-b border-slate-800">
-              <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
-                <input type="checkbox" className="rounded bg-slate-700 border-slate-600" />
-                Select all sources
-              </label>
+            <div className="px-4 py-2 border-b border-slate-800 space-y-2">
+              <button
+                onClick={selectedFileIndices.size === uploadedFiles.length ? deselectAllFiles : selectAllFiles}
+                className="w-full flex items-center justify-center gap-2 text-sm px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 rounded border border-violet-500/30 transition"
+              >
+                {selectedFileIndices.size === uploadedFiles.length ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    All Selected
+                  </>
+                ) : (
+                  <>
+                    <div className="w-4 h-4 border-2 border-violet-400 rounded-full" />
+                    Select All
+                  </>
+                )}
+              </button>
+              <div className="text-xs text-slate-500 text-center">
+                {selectedFileIndices.size} of {uploadedFiles.length} selected
+              </div>
             </div>
           )}
 
@@ -1230,37 +1404,52 @@ export default function WeaveItApp() {
                 <p className="text-xs mt-1">Upload PDFs, text files, or documents</p>
               </div>
             ) : (
-              uploadedFiles.map((file, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleSelectSource(file)}
-                  className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition ${
-                    selectedSource?.name === file.name
-                      ? "bg-violet-600/20 border border-violet-500/50"
-                      : "bg-slate-800/50 hover:bg-slate-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <FileText className="w-4 h-4 text-violet-400 flex-shrink-0" />
-                    <span className="text-sm truncate">{file.name}</span>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFile(index);
-                    }}
-                    className="p-1 hover:bg-slate-700 rounded"
+              uploadedFiles.map((file, index) => {
+                const isSelected = selectedFileIndices.has(index)
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center gap-2 p-2 rounded-lg transition ${
+                      isSelected
+                        ? "bg-violet-600/20 border border-violet-500/50"
+                        : "bg-slate-800/50 hover:bg-slate-800 border border-transparent"
+                    }`}
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleFileSelection(index)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-4 h-4 cursor-pointer rounded bg-slate-700 border-slate-600 accent-violet-600"
+                    />
+                    <div
+                      onClick={() => {
+                        toggleFileSelection(index)
+                        handleSelectSource(file)
+                      }}
+                      className="flex-1 flex items-center gap-2 truncate cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4 text-violet-400 flex-shrink-0" />
+                      <span className="text-sm truncate">{file.name}</span>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFile(index);
+                      }}
+                      className="p-1 hover:bg-slate-700 rounded flex-shrink-0"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )
+              })
             )}
           </div>
         </aside>
 
         {/* Center Panel - Unified Content */}
-        <main className="flex-1 flex flex-col bg-slate-950">
+        <main className="flex-1 flex flex-col bg-slate-950 min-w-0">
           <div className="p-4 border-b border-slate-800 flex items-center justify-between">
             <span className="font-semibold">Chat</span>
             <button onClick={() => showComingSoon('Settings coming soon')} className="p-1.5 rounded-lg hover:bg-slate-800">
@@ -1271,7 +1460,7 @@ export default function WeaveItApp() {
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 flex flex-col p-6 overflow-hidden">
               {/* Unified Canvas - Content Area */}
-              <div className="flex-1 overflow-y-auto mb-4 min-h-[300px] p-4 bg-slate-900/10 border border-slate-700/50 rounded-xl">
+              <div className="flex-1 overflow-y-auto mb-4 min-h-[300px] p-4 bg-slate-900/10 border border-slate-700/50 rounded-xl min-w-0">
                 {content.trim().length === 0 && uploadedFiles.length === 0 ? (
                   <div className="h-full relative">
                     <textarea
@@ -1299,8 +1488,8 @@ export default function WeaveItApp() {
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-sm font-semibold text-white mb-2">Source Content</label>
-                    <pre className="whitespace-pre-wrap text-sm text-slate-300 bg-transparent p-3 rounded w-full">{uploadedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n") || "(No extractable text)"}</pre>
+                    <label className="block text-sm font-semibold text-white mb-2">Source Content {selectedFiles.length > 0 && `(${selectedFiles.length} selected)`}</label>
+                    <pre className="whitespace-pre-wrap break-words text-sm text-slate-300 bg-transparent p-3 rounded w-full max-w-full overflow-x-auto">{selectedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n") || "(No extractable text)"}</pre>
                   </div>
                 )}
               </div>
@@ -1428,7 +1617,7 @@ export default function WeaveItApp() {
         </main>
 
         {/* Right Panel - Studio Output */}
-        <aside className="w-80 flex-shrink-0 border-l border-slate-800 bg-slate-900/50 flex flex-col">
+        <aside className="w-80 flex-shrink-0 border-l border-slate-800 bg-slate-900/50 flex flex-col min-w-0">
           <div className="p-4 border-b border-slate-800 flex items-center justify-between">
             <span className="font-semibold">Studio</span>
           </div>

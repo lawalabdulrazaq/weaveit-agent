@@ -103,7 +103,7 @@ function SuccessNotification({ notification, onClose }: { notification: any; onC
   );
 }
 
-export default function Pricing() {
+export default function Pricing({ onClose, onPurchase }: { onClose?: () => void; onPurchase?: (credits: number) => void }) {
   const enterpriseTier = {
     id: "enterprise",
     price: null,
@@ -152,6 +152,7 @@ export default function Pricing() {
     setModalOpen(false);
     setSelected(null);
     setProcessing(false);
+    if (typeof onClose === "function") onClose()
   };
 
   const handleConfirm = async () => {
@@ -172,7 +173,8 @@ export default function Pricing() {
           message: `${selected.credits} credits have been awarded to your account. Start creating videos now!`
         });
         setNotificationVisible(true);
-        closeModal();
+          closeModal();
+          if (onPurchase && selected.credits) onPurchase(selected.credits);
         return;
       }
 
@@ -185,6 +187,7 @@ export default function Pricing() {
       });
       setNotificationVisible(true);
       closeModal();
+      if (onPurchase && selected.credits) onPurchase(selected.credits);
     } catch (err: any) {
       console.error("Purchase failed", err);
       setMessage(err?.message || "Purchase failed");
