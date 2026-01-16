@@ -848,7 +848,11 @@ export default function WeaveItApp() {
       if (uploads.length > 0) {
         const form = new FormData()
         uploads.forEach((f) => form.append('files', f))
-        const resp = await fetch(getBackendUrl('/api/upload'), {
+        // const resp = await fetch(getBackendUrl('/api/upload'), {
+        //   method: 'POST',
+        //   body: form,
+        // })
+        const resp = await fetch('/api/upload', {
           method: 'POST',
           body: form,
         })
