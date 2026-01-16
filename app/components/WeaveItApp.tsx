@@ -844,14 +844,10 @@ export default function WeaveItApp() {
         setUploadedFiles((prev) => [...prev, ...toAdd.map(t => ({ name: t.name, type: t.type, content: t.content }))])
       }
 
-      // If there are binary files, upload them to backend which may perform extraction
+      // If there are binary files, upload them to the local Next.js API
       if (uploads.length > 0) {
         const form = new FormData()
         uploads.forEach((f) => form.append('files', f))
-        // const resp = await fetch(getBackendUrl('/api/upload'), {
-        //   method: 'POST',
-        //   body: form,
-        // })
         const resp = await fetch('/api/upload', {
           method: 'POST',
           body: form,
