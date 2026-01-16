@@ -171,8 +171,12 @@ const fetchGitHubFileContent = async (
       throw new Error(`Failed to fetch ${path}`)
     }
 
-    const text = await response.text()
-    return text
+    const data = await response.json()
+    // GitHub API returns content as base64 encoded string
+    if (data.content) {
+      return atob(data.content)
+    }
+    return ""
   } catch (error) {
     console.error(`Error fetching ${path}:`, error)
     return ""
@@ -848,6 +852,10 @@ export default function WeaveItApp() {
       if (uploads.length > 0) {
         const form = new FormData()
         uploads.forEach((f) => form.append('files', f))
+        // const resp = await fetch(getBackendUrl('/api/upload'), {
+        //   method: 'POST',
+        //   body: form,
+        // })
         const resp = await fetch('/api/upload', {
           method: 'POST',
           body: form,
