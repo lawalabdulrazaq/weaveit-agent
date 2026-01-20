@@ -22,11 +22,8 @@ const MAX_GENERATION_WORDS = 5000
 const maxFileBytes = MAX_FILE_SIZE_MB * 1024 * 1024
 const maxTotalBytes = MAX_TOTAL_SIZE_MB * 1024 * 1024
 
-const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-
-async function ensureUploadDir() {
-  await fs.mkdir(uploadDir, { recursive: true })
-}
+// Note: We don't write files to disk anymore to support Vercel serverless environment
+// Files are processed in memory only
 
 function countWords(text?: string) {
   if (!text) return 0
@@ -40,16 +37,16 @@ function truncateWords(text: string, limit: number) {
   return words.slice(0, limit).join(' ')
 }
 
-async function extractTextFromFile(filePath: string, originalName: string) {
+async function extractTextFromFile(fileBuffer: Buffer, originalName: string) {
   const ext = path.extname(originalName).toLowerCase()
   try {
     if (['.txt', '.md', '.json', '.csv', '.js', '.ts', '.jsx', '.tsx'].includes(ext)) {
-      return await fs.readFile(filePath, 'utf-8')
+      return fileBuffer.toString('utf-8')
     }
 
     if (ext === '.docx' || ext === '.doc') {
       try {
-        const result = await mammoth.extractRawText({ path: filePath })
+        const result = await mammoth.extractRawText({ buffer: fileBuffer })
         return result.value || ''
       } catch (e) {
         console.error('DOCX extraction failed', e)
@@ -59,7 +56,7 @@ async function extractTextFromFile(filePath: string, originalName: string) {
 
     if (ext === '.pdf') {
       try {
-        const data = new Uint8Array(await fs.readFile(filePath))
+        const data = new Uint8Array(fileBuffer)
         const doc = await pdfjsLib.getDocument({ data }).promise
         let full = ''
         for (let i = 1; i <= doc.numPages; i++) {
@@ -84,8 +81,6 @@ async function extractTextFromFile(filePath: string, originalName: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    await ensureUploadDir()
-
     const formData = await req.formData()
     const files = formData.getAll('files') as File[]
 
@@ -120,14 +115,9 @@ export async function POST(req: NextRequest) {
 
     for (const { file } of fileList) {
       const buffer = await file.arrayBuffer()
-      const savedName = `${Date.now()}_${file.name}`
-      const savedPath = path.join(uploadDir, savedName)
+      const fileBuffer = Buffer.from(buffer)
 
-      await fs.writeFile(savedPath, Buffer.from(buffer))
-
-      const publicUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || ''}${'/uploads/' + savedName}`
-
-      let extracted = await extractTextFromFile(savedPath, file.name)
+      let extracted = await extractTextFromFile(fileBuffer, file.name)
 
       let words = countWords(extracted)
       if (words > 0) {
@@ -150,8 +140,6 @@ export async function POST(req: NextRequest) {
       results.push({
         filename: file.name,
         name: file.name,
-        savedAs: savedName,
-        url: publicUrl,
         size: file.size,
         extracted_text: extracted || null,
         content: extracted || null,

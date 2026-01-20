@@ -107,6 +107,10 @@ function OrbitalRingsBackground() {
               r="5"
               fill="rgba(139, 92, 246, 0.9)"
               filter="url(#orbitalGlow)"
+              initial={{
+                cx: 600 + ring.rx,
+                cy: 300
+              }}
               animate={{
                 cx: [
                   600 + ring.rx,
@@ -136,6 +140,10 @@ function OrbitalRingsBackground() {
               r="4"
               fill="rgba(59, 130, 246, 0.7)"
               filter="url(#orbitalGlow)"
+              initial={{
+                cx: 600 - ring.rx,
+                cy: 300
+              }}
               animate={{
                 cx: [
                   600 - ring.rx,
