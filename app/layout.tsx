@@ -24,6 +24,24 @@ export default function RootLayout({
     <html lang="en" className={`${polySans.variable}`}>
       <head>
         <meta name="theme-color" content="#000000" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Suppress non-critical proxy errors from wallet extensions
+              if (typeof window !== 'undefined') {
+                const originalError = console.error;
+                console.error = function(...args) {
+                  const errorStr = String(args[0]);
+                  // Suppress harmless proxy traps from wallet adapters
+                  if (errorStr && errorStr.includes("'set' on proxy") && errorStr.includes('tronlink')) {
+                    return;
+                  }
+                  originalError.apply(console, args);
+                };
+              }
+            `,
+          }}
+        />
       </head>
       <body className={polySans.className}>
         <SolanaWalletProvider>{children}</SolanaWalletProvider>

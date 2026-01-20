@@ -11,10 +11,16 @@ async function handleResponse(resp: Response) {
     } catch (_) {
       body = await resp.text().catch(() => null)
     }
-    console.error(`HTTP ${resp.status} error:`, body)
-    throw new Error(`HTTP ${resp.status} - ${JSON.stringify(body)}`)
+    const errorMsg = `HTTP ${resp.status} error: ${body ? JSON.stringify(body) : 'Empty response'}`
+    console.error(errorMsg)
+    throw new Error(errorMsg)
   }
-  return resp.json()
+  try {
+    return await resp.json()
+  } catch (e) {
+    console.error(`Failed to parse JSON response: ${e}`)
+    throw new Error(`Invalid JSON response from server`)
+  }
 }
 
 export async function fetchUserContent(walletAddress: string): Promise<{
@@ -34,8 +40,19 @@ export async function fetchUserContent(walletAddress: string): Promise<{
 }> {
   const url = `${getBackendBaseUrl()}/api/wallet/${encodeURIComponent(walletAddress)}/content`
   console.log("Fetching content from:", url)
-  const resp = await fetch(url)
-  return handleResponse(resp)
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
+    const resp = await fetch(url, { signal: controller.signal })
+    clearTimeout(timeout)
+    return handleResponse(resp)
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('abort')) {
+      throw new Error(`Request timeout while fetching content from ${url}`)
+    }
+    throw error
+  }
 }
 
 export async function fetchGlobalStats(): Promise<{
@@ -54,8 +71,20 @@ export async function fetchGlobalStats(): Promise<{
 
 export async function fetchUserPoints(walletAddress: string): Promise<{ points?: number; trial_expires_at?: string }>{
   const url = `${getBackendBaseUrl()}/api/users/${encodeURIComponent(walletAddress)}/points`
-  const resp = await fetch(url)
-  return handleResponse(resp)
+  console.log("Fetching user points from:", url)
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
+    const resp = await fetch(url, { signal: controller.signal })
+    clearTimeout(timeout)
+    return handleResponse(resp)
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('abort')) {
+      throw new Error(`Request timeout while fetching points from ${url}`)
+    }
+    throw error
+  }
 }
 
 export default {

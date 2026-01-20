@@ -6,6 +6,7 @@ import {
   Users
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 function CodeIcon({ className = "w-full h-full" }: { className?: string }) {
   return (
@@ -74,25 +75,30 @@ function GovernIcon({ className = "w-6 h-6" }: { className?: string }) {
 }
 
 function HexagonalMeshBackground() {
-  // Generate hexagonal grid positions
-  const hexSize = 80;
-  const rows = 12;
-  const cols = 15;
-  const hexagons = [];
+  const [hexagons, setHexagons] = useState<any[]>([])
+  
+  // Generate hexagonal grid positions only after hydration
+  useEffect(() => {
+    const hexSize = 80;
+    const rows = 12;
+    const cols = 15;
+    const generatedHexagons = [];
 
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const x = col * hexSize * 1.5;
-      const y = row * hexSize * Math.sqrt(3) + (col % 2 ? hexSize * Math.sqrt(3) / 2 : 0);
-      hexagons.push({ 
-        id: `hex-${row}-${col}`, 
-        x, 
-        y, 
-        delay: (row + col) * 0.05,
-        duration: 3 + Math.random() * 2
-      });
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = col * hexSize * 1.5;
+        const y = row * hexSize * Math.sqrt(3) + (col % 2 ? hexSize * Math.sqrt(3) / 2 : 0);
+        generatedHexagons.push({ 
+          id: `hex-${row}-${col}`, 
+          x, 
+          y, 
+          delay: (row + col) * 0.05,
+          duration: 3 + Math.random() * 2
+        });
+      }
     }
-  }
+    setHexagons(generatedHexagons)
+  }, [])
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-15">

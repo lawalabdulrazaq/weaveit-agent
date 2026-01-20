@@ -598,7 +598,7 @@ export default function WeaveItApp() {
   const [points, setPoints] = useState<number | null>(null)
   const [_, setTrialExpiresAt] = useState<string | null>(null)
   const [generationType, setGenerationType] = useState<"video" | "audio">("video")
-  const [success, setSuccess] = useState("")
+  const [selectedModel, setSelectedModel] = useState<"mona" | "dona">("dona")
   const [loadingStep, setLoadingStep] = useState("")
   const [progressPct, setProgressPct] = useState(0)
 
@@ -623,6 +623,7 @@ export default function WeaveItApp() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [backendError, setBackendError] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [showPricing, setShowPricing] = useState(false)
@@ -631,6 +632,22 @@ export default function WeaveItApp() {
     setToastMessage(msg)
     setTimeout(() => setToastMessage(null), 2500)
   }
+
+  // Auto-dismiss errors after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(""), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
+
+  // Auto-dismiss success after 3 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(""), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [success])
 
   // CRITICAL FIX: Only fetch user content AFTER initial render
   // This prevents blocking the page load with API calls
@@ -695,15 +712,21 @@ export default function WeaveItApp() {
           setPoints(typeof pointsData.points === 'number' ? pointsData.points : null)
           setTrialExpiresAt(pointsData.trial_expires_at || null)
         } catch (err) {
-          console.debug('Failed to fetch points:', err)
+          console.warn('Failed to fetch points (this is non-critical):', err)
           setPoints(null)
           setTrialExpiresAt(null)
         }
       } catch (err) {
-        console.error("Failed to fetch content:", err)
+        const errorMsg = err instanceof Error ? err.message : String(err)
+        console.error("Failed to fetch content:", errorMsg)
+        // Don't set videos to empty on error - keep existing state
+        // User will see a warning but won't lose their data
+        setToastMessage(`Unable to load content: ${errorMsg}`)
       }
     } catch (error) {
-      console.error("Error fetching content:", error)
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      console.error("Error fetching content:", errorMsg)
+      setToastMessage(`Error: ${errorMsg}`)
     } finally {
       setLoadingVideos(false)
     }
@@ -733,7 +756,8 @@ export default function WeaveItApp() {
     console.log("Content generated with URL:", videoUrl)
     
     const contentIdMatch = videoUrl.match(/\/api\/(?:videos|audio)\/([a-f0-9-]+)/i)
-    const contentId = contentIdMatch ? contentIdMatch[1] : `local-${Date.now()}`
+    // Use crypto.randomUUID() for better hydration-safe ID generation, fallback to crypto.getRandomValues if needed
+    const contentId = contentIdMatch ? contentIdMatch[1] : `local-${typeof crypto !== 'undefined' ? Math.random().toString(36).substring(2, 11) : 'unknown'}`
     
     const newContent = {
       id: contentId,
@@ -960,6 +984,36 @@ export default function WeaveItApp() {
     }
   }
     
+  const handleDeleteVideo = async (videoId: string) => {
+    if (!publicKey) return
+
+    try {
+      const walletAddress = publicKey.toBase58()
+      const backendBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
+
+      const response = await fetch(`${backendBaseUrl}/api/wallet/${walletAddress}/videos/${videoId}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete video")
+      }
+
+      // Remove from state
+      setVideos((prev) => prev.filter((v) => v.id !== videoId))
+      
+      // Close current video if it was the one deleted
+      if (currentVideo?.url.includes(videoId)) {
+        setCurrentVideo(null)
+      }
+
+      showComingSoon("Video deleted successfully")
+    } catch (err) {
+      console.error("Error deleting video:", err)
+      setError("Failed to delete video")
+    }
+  }
+
   const handleImpromptuGenerate = async () => {
     if (!impromptuQuestion.trim()) return
 
@@ -997,7 +1051,7 @@ export default function WeaveItApp() {
       setImpromptuLoading(false)
       setImpromptuQuestion("")
       const newVideo = {
-        id: Date.now().toString(),
+        id: `temp-${Math.random().toString(36).substring(2, 11)}`,
         title: impromptuQuestion.slice(0, 30) + "...",
         url: "https://example.com/video.mp4",
         type: generationType,
@@ -1052,12 +1106,14 @@ export default function WeaveItApp() {
         scriptContent.slice(0, 50).trim() +
         (scriptContent.length > 50 ? "..." : "");
 
-      const endpoint = genType === "audio" ? "/api/generate/audio" : "/api/generate"; //"/api/generate";
+      const endpoint = genType === "audio" ? "/api/generate/audio" : "/api/generate";
 
       const backendBaseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
-      const response = await fetch(`${backendBaseUrl}${endpoint}`, {
+      const renderVersion = selectedModel === "mona" ? "v1" : "v2";
+
+      const response = await fetch(`${backendBaseUrl}${endpoint}?renderVersion=${renderVersion}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1502,19 +1558,31 @@ export default function WeaveItApp() {
                 )}
               </div>
 
-              {/* Error Message */}
+              {/* Error Message - Fixed Position, Dismissible */}
               {error && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  {error}
+                <div className="fixed top-20 right-4 max-w-sm z-40 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2 text-red-400 text-sm shadow-lg animate-in fade-in duration-200">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 pr-2">{error}</div>
+                  <button
+                    onClick={() => setError("")}
+                    className="flex-shrink-0 p-0.5 hover:bg-red-500/20 rounded transition"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               )}
 
-              {/* Success Message */}
+              {/* Success Message - Fixed Position, Dismissible */}
               {success && (
-                <div className="mb-4 p-3 bg-violet-600/10 border border-violet-600/30 rounded-lg flex items-center gap-2 text-violet-400 text-sm">
-                  <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                  {success}
+                <div className="fixed top-20 right-4 max-w-sm z-40 p-3 bg-violet-600/10 border border-violet-600/30 rounded-lg flex items-start gap-2 text-violet-400 text-sm shadow-lg animate-in fade-in duration-200">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 pr-2">{success}</div>
+                  <button
+                    onClick={() => setSuccess("")}
+                    className="flex-shrink-0 p-0.5 hover:bg-violet-500/20 rounded transition"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               )}
 
@@ -1580,6 +1648,29 @@ export default function WeaveItApp() {
                     </div>
                   </div>
                   {uploadedFiles.length > 0 && <span className="text-xs text-slate-500">{uploadedFiles.length} source(s)</span>}
+                  <div className="flex items-center gap-2 ml-auto">
+                    <span className="text-xs text-slate-400">Model:</span>
+                    <button
+                      onClick={() => setSelectedModel("mona")}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
+                        selectedModel === "mona"
+                          ? "bg-blue-600 text-white"
+                          : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      }`}
+                    >
+                      Mona
+                    </button>
+                    <button
+                      onClick={() => setSelectedModel("dona")}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
+                        selectedModel === "dona"
+                          ? "bg-pink-600 text-white"
+                          : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      }`}
+                    >
+                      Dona
+                    </button>
+                  </div>
                 </div>
                 <button
                   onClick={() => handleGenerate()}
@@ -1657,21 +1748,35 @@ export default function WeaveItApp() {
             ) : (
               <div className="space-y-2">
                 {videos.map((v) => (
-                  <button
+                  <div
                     key={v.id}
-                    onClick={() => setCurrentVideo({ url: v.url, title: v.title })}
-                    className="w-full p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-left transition"
+                    className="group w-full p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition"
                   >
-                    <div className="flex items-center gap-2">
-                      {v.type === "video" ? (
-                        <Film className="w-4 h-4 text-violet-400" />
-                      ) : (
-                        <Mic className="w-4 h-4 text-pink-400" />
-                      )}
-                      <span className="text-sm font-medium truncate">{v.title || "Untitled"}</span>
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">{new Date(v.createdAt).toLocaleDateString()}</div>
-                  </button>
+                    <button
+                      onClick={() => setCurrentVideo({ url: v.url, title: v.title })}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        {v.type === "video" ? (
+                          <Film className="w-4 h-4 text-violet-400" />
+                        ) : (
+                          <Mic className="w-4 h-4 text-pink-400" />
+                        )}
+                        <span className="text-sm font-medium truncate">{v.title || "Untitled"}</span>
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">{new Date(v.createdAt).toLocaleDateString()}</div>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteVideo(v.id)
+                      }}
+                      className="mt-2 w-full p-1.5 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded border border-red-500/30 hover:border-red-500/50 transition flex items-center justify-center gap-1"
+                    >
+                      <X className="w-3 h-3" />
+                      Delete
+                    </button>
+                  </div>
                 ))}
               </div>
             )}

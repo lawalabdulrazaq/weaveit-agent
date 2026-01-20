@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 
 function CodeIcon({ className = "w-full h-full" }: { className?: string }) {
@@ -37,15 +38,20 @@ function VideoIcon({ className = "w-full h-full" }: { className?: string }) {
 }
 
 function ParticleNetworkBackground() {
-  // Generate random particle positions
-  const particles = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 3 + 1,
-    duration: Math.random() * 20 + 15,
-    delay: Math.random() * 5,
-  }));
+  const [particles, setParticles] = useState<any[]>([])
+  
+  // Generate random particle positions only after hydration
+  useEffect(() => {
+    const generatedParticles = Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 3 + 1,
+      duration: Math.random() * 20 + 15,
+      delay: Math.random() * 5,
+    }))
+    setParticles(generatedParticles)
+  }, [])
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">

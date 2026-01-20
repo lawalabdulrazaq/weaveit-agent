@@ -2,13 +2,39 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
 import mammoth from 'mammoth'
-// Use the legacy build of pdfjs for Node.js runtime (avoids DOMMatrix/browser APIs)
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
 
-// Disable worker usage in Node.js environment to avoid pdf.worker imports
-if (typeof (pdfjsLib as any).GlobalWorkerOptions !== 'undefined') {
-  ;(pdfjsLib as any).GlobalWorkerOptions.workerSrc = ''
-  ;(pdfjsLib as any).GlobalWorkerOptions.disableWorker = true
+// Simple polyfills for Node.js environment to prevent DOMMatrix errors
+if (typeof global !== 'undefined') {
+  if (typeof global.DOMMatrix === 'undefined') {
+    global.DOMMatrix = class DOMMatrix {
+      constructor(values?: any) { }
+    } as any
+  }
+  if (typeof global.ImageData === 'undefined') {
+    global.ImageData = class ImageData {
+      constructor(data: any, width: number, height?: number) { }
+    } as any
+  }
+  if (typeof global.Path2D === 'undefined') {
+    global.Path2D = class Path2D {
+      constructor(path?: any) { }
+    } as any
+  }
+}
+
+// Use the legacy build of pdfjs for Node.js runtime (avoids DOMMatrix/browser APIs)
+let pdfjsLib: any
+try {
+  pdfjsLib = require('pdfjs-dist/legacy/build/pdf')
+  
+  // Disable worker usage in Node.js environment to avoid pdf.worker imports
+  if (typeof pdfjsLib.GlobalWorkerOptions !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+    pdfjsLib.GlobalWorkerOptions.disableWorker = true
+  }
+} catch (e) {
+  console.warn('PDF.js library not available, PDF extraction will be skipped')
+  pdfjsLib = null
 }
 
 // ===== Limits (easy to adjust) =====
@@ -56,6 +82,10 @@ async function extractTextFromFile(fileBuffer: Buffer, originalName: string) {
 
     if (ext === '.pdf') {
       try {
+        if (!pdfjsLib) {
+          console.warn('PDF.js not available, skipping PDF extraction')
+          return ''
+        }
         const data = new Uint8Array(fileBuffer)
         const doc = await pdfjsLib.getDocument({ data }).promise
         let full = ''

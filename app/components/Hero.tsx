@@ -22,6 +22,7 @@ function ThunderIcon({ className = "w-5 h-5" }: { className?: string }) {
 function GridBackground() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
+  const [gridDimensions, setGridDimensions] = React.useState({ cols: 20, rows: 20 })
 
   const springConfig = { damping: 25, stiffness: 150 };
   const smoothMouseX = useSpring(mouseX, springConfig);
@@ -33,13 +34,28 @@ function GridBackground() {
       mouseY.set(e.clientY);
     };
 
+    const handleResize = () => {
+      const gridSize = 50;
+      setGridDimensions({
+        cols: Math.ceil(window.innerWidth / gridSize),
+        rows: Math.ceil(window.innerHeight / gridSize)
+      })
+    }
+
+    // Set initial dimensions on mount
+    handleResize()
+
     window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("resize", handleResize);
+    };
   }, [mouseX, mouseY]);
 
   const gridSize = 50;
-  const gridCols = Math.ceil(typeof window !== 'undefined' ? window.innerWidth / gridSize : 20);
-  const gridRows = Math.ceil(typeof window !== 'undefined' ? window.innerHeight / gridSize : 20);
+  const gridCols = gridDimensions.cols;
+  const gridRows = gridDimensions.rows;
 
   return (
     <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
