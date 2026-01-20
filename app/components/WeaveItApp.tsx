@@ -974,7 +974,7 @@ export default function WeaveItApp() {
         scriptContent.slice(0, 50).trim() +
         (scriptContent.length > 50 ? "..." : "");
 
-      const endpoint = genType === "audio" ? "/api/generate/audio" : "/api/generate";
+      const endpoint = genType === "audio" ? "/api/generate/audio" : "/api/generate"; //"/api/generate";
 
       const backendBaseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
