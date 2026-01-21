@@ -322,54 +322,56 @@ function analyzeWordCount(content: string, uploadedFiles: { name: string; type: 
   return { count: totalWords, category, label, color, bgColor, percentage, isValid }
 }
 
-function analyzeImpromptuWordCount(content: string, uploadedFiles: { name: string; type: string; content?: string }[]): WordCountStatus {
-  const contentWords = countWords(content)
-  const uploadedWords = uploadedFiles.reduce((sum, f) => sum + countWords(f.content), 0)
-  const totalWords = contentWords + uploadedWords
+// New function to analyze quick prompt bar's own word count (independent from main content)
+function analyzeQuickPromptWordCount(promptText: string): WordCountStatus {
+  const promptWords = countWords(promptText)
 
-  // Stricter limits for impromptu (lightweight, quick generation)
   let category: "bad" | "good" | "better" | "outrageous"
   let label: string
   let isValid: boolean
 
-  // If no content, show neutral state (require at least some content)
-  if (totalWords === 0) {
+  // For quick prompts, we allow users to ask questions even with no prompt text
+  // But still enforce a 2000-word limit on the prompt itself
+  if (promptWords === 0) {
     category = "good"
-    label = "Good"
-    isValid = false
-  } else if (totalWords < 1000) {
-    // Low counts are acceptable for impromptu/quick help
+    label = "Ready"
+    isValid = true // Allow submission with empty prompt
+  } else if (promptWords < 100) {
     category = "good"
     label = "Good"
     isValid = true
-  } else if (totalWords < 2000) {
+  } else if (promptWords < 500) {
     category = "better"
     label = "Optimal"
     isValid = true
+  } else if (promptWords < 2000) {
+    category = "better"
+    label = "Good"
+    isValid = true
   } else {
-    // Only warn/block when content is excessive for quick help
+    // Only block if prompt itself exceeds 2000 words
     category = "outrageous"
-    label = "Too much"
+    label = "Too long"
     isValid = false
   }
 
   const color = {
     bad: "text-red-400",
-    good: totalWords === 0 ? "text-slate-400" : "text-yellow-400",
+    good: promptWords === 0 ? "text-slate-400" : "text-yellow-400",
     better: "text-green-400",
     outrageous: "text-red-400",
   }[category]
 
   const bgColor = {
     bad: "bg-red-500/10 border-red-500/30",
-    good: totalWords === 0 ? "bg-slate-500/10 border-slate-500/30" : "bg-yellow-500/10 border-yellow-500/30",
+    good: promptWords === 0 ? "bg-slate-500/10 border-slate-500/30" : "bg-yellow-500/10 border-yellow-500/30",
     better: "bg-green-500/10 border-green-500/30",
     outrageous: "bg-red-500/10 border-red-500/30",
   }[category]
 
-  const percentage = Math.min((totalWords / 2000) * 100, 100)
+  const percentage = Math.min((promptWords / 2000) * 100, 100)
 
-  return { count: totalWords, category, label, color, bgColor, percentage, isValid }
+  return { count: promptWords, category, label, color, bgColor, percentage, isValid }
 }
 
 interface VideoDisplayProps {
@@ -960,55 +962,14 @@ export default function WeaveItApp() {
     }
   }
     
+  // Wrapper to allow quick prompt generation to use the main generator
   const handleImpromptuGenerate = async () => {
     if (!impromptuQuestion.trim()) return
-
-    // Use only selected files
-    const selectedFiles = uploadedFiles.filter((_, index) => selectedFileIndices.has(index))
-    const previewContent = content.trim() || selectedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n")
-
-    if (!previewContent.trim()) {
-      setError("No content available to answer questions about")
-      return
-    }
-
-    // Check impromptu word count validity (only block if empty or too large)
-    const impromptuStatus = analyzeImpromptuWordCount(content, selectedFiles)
-    if (!impromptuStatus.isValid) {
-      if (impromptuStatus.count === 0) {
-        setError("No content available to answer questions about");
-        return;
-      }
-      if (impromptuStatus.category === "outrageous") {
-        setError(`Content is too long (${impromptuStatus.count.toLocaleString()} words). Limit: 2,000 words. Use main generation for longer content.`);
-        return;
-      }
-    }
-
-    if (!publicKey) {
-      setError("Please connect your wallet")
-      return
-    }
-
-    setImpromptuLoading(true)
-    setError("")
-
-    setTimeout(() => {
-      setImpromptuLoading(false)
-      setImpromptuQuestion("")
-      const newVideo = {
-        id: Date.now().toString(),
-        title: impromptuQuestion.slice(0, 30) + "...",
-        url: "https://example.com/video.mp4",
-        type: generationType,
-        createdAt: new Date().toISOString()
-      }
-      setVideos([newVideo, ...videos])
-      setCurrentVideo({ url: newVideo.url, title: newVideo.title })
-    }, 2000)
+    // Delegate to main generator, passing the quick prompt explicitly
+    await handleGenerate(undefined, impromptuQuestion)
   }
 
-  const handleGenerate = async (explicitGenType?: "video" | "audio") => {
+  const handleGenerate = async (explicitGenType?: "video" | "audio", explicitPrompt?: string) => {
     const genType = explicitGenType ?? generationType;
 
     // Use only selected files
@@ -1018,26 +979,32 @@ export default function WeaveItApp() {
       content.trim() ||
       selectedFiles.map((f) => f.content || "").filter(Boolean).join("\n\n");
 
-    if (!scriptContent) {
-      setError("Please add content or sources");
+    const promptText = (explicitPrompt ?? impromptuQuestion).trim()
+
+    // Allow generation if either script content exists OR a quick prompt is provided
+    if (!scriptContent && !promptText) {
+      setError("Please add content, sources, or provide a quick prompt");
       return;
     }
 
-    // Check word count validity (only block if empty or too large)
-    const currentWordCountStatus = analyzeWordCount(content, selectedFiles)
-    if (!currentWordCountStatus.isValid) {
-      if (currentWordCountStatus.count === 0) {
-        setError("Please add content or sources");
-        return;
-      }
-      if (currentWordCountStatus.category === "outrageous") {
-        setError(`Content exceeds 5,000 word limit (${currentWordCountStatus.count.toLocaleString()} words). Please reduce content.`);
-        return;
+    // If prompt is present, validate its length
+    if (promptText) {
+      const promptStatus = analyzeQuickPromptWordCount(promptText)
+      if (!promptStatus.isValid) {
+        setError(`Quick prompt is too long (${promptStatus.count.toLocaleString()} words). Limit: 2,000 words.`)
+        return
       }
     }
 
+    // Check word count validity for main content (only block if too large)
+    const currentWordCountStatus = analyzeWordCount(content, selectedFiles)
+    if (!currentWordCountStatus.isValid && currentWordCountStatus.category === "outrageous") {
+      setError(`Content exceeds 5,000 word limit (${currentWordCountStatus.count.toLocaleString()} words). Please reduce content.`)
+      return
+    }
+
     if (!publicKey) {
-      setError("Wallet not connected");
+      setError("Wallet not connected")
       return;
     }
 
@@ -1049,8 +1016,8 @@ export default function WeaveItApp() {
 
     try {
       const autoTitle =
-        scriptContent.slice(0, 50).trim() +
-        (scriptContent.length > 50 ? "..." : "");
+        (scriptContent || promptText).slice(0, 50).trim() +
+        ((scriptContent || promptText).length > 50 ? "..." : "");
 
       const endpoint = genType === "audio" ? "/api/generate/audio" : "/api/generate";
 
@@ -1061,8 +1028,8 @@ export default function WeaveItApp() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          script: scriptContent,
-          prompt: impromptuQuestion.trim() || null,
+          script: scriptContent || null,
+          prompt: promptText || null,
           walletAddress: publicKey.toBase58(),
         }),
       });
@@ -1105,13 +1072,16 @@ export default function WeaveItApp() {
           const contentId = data.videoId || data.audioId;
           const contentUrl = genType === "audio" ? `${backendBaseUrl}/api/audio/${contentId}` : `${backendBaseUrl}/api/videos/${contentId}`;
 
-          handleVideoGenerated(contentUrl, title, genType);
+          handleVideoGenerated(contentUrl, title || autoTitle, genType);
           setSuccess("Completed!");
           setLoading(false);
           setLoadingStep("");
 
           // Update points locally after generation
           setPoints(prev => typeof prev === 'number' ? prev - (genType === "video" ? 2 : 1) : prev);
+
+          // If this was triggered from quick prompt, clear it
+          if (explicitPrompt) setImpromptuQuestion("")
 
           ws.close();
         }
@@ -1140,13 +1110,14 @@ export default function WeaveItApp() {
   // Calculate word count for display - use only selected files
   const selectedFiles = uploadedFiles.filter((_, index) => selectedFileIndices.has(index))
   const wordCountStatus = analyzeWordCount(content, selectedFiles)
-  const impromptuStatus = analyzeImpromptuWordCount(content, selectedFiles)
 
+  // Quick prompt has independent word count based only on the prompt text
+  const impromptuStatus = analyzeQuickPromptWordCount(impromptuQuestion)
 
   // Wallet not connected - show connect prompt
   if (!connected) {
     return (
-      <div className="h-screen bg-slate-950 flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center bg-slate-950">
         <div className="text-center space-y-6">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-500 flex items-center justify-center">
             <Sparkles className="w-8 h-8 text-white" />
@@ -1163,7 +1134,7 @@ export default function WeaveItApp() {
           }} />
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -1525,25 +1496,25 @@ export default function WeaveItApp() {
                   value={impromptuQuestion}
                   onChange={(e) => setImpromptuQuestion(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && impromptuQuestion.trim() && !impromptuLoading && impromptuStatus.isValid) {
+                    if (e.key === "Enter" && impromptuQuestion.trim() && !loading && impromptuStatus.isValid) {
                       handleImpromptuGenerate();
                     }
                   }}
                   placeholder="Ask a question about the content..."
                   className="flex-1 bg-transparent text-sm outline-none placeholder-slate-500"
-                  disabled={impromptuLoading}
+                  disabled={loading}
                 />
                 <button
                   onClick={() => {
                     const t: "audio" | "video" = "audio";
                     setGenerationType(t);
-                    if (impromptuQuestion.trim()) handleImpromptuGenerate();
+                    if (impromptuQuestion.trim()) handleGenerate('audio', impromptuQuestion);
                   }}
-                  disabled={impromptuLoading || !impromptuStatus.isValid}
-                  title={!impromptuStatus.isValid ? (impromptuStatus.category === "outrageous" ? "Content too long for Quick Help (max 2,000 words)" : "Add content") : ""}
+                  disabled={loading || !impromptuStatus.isValid}
+                  title={!impromptuStatus.isValid ? "Quick prompt exceeds 2,000 words" : "Generate audio from quick prompt"}
                   className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-1.5 transition"
                 >
-                  {impromptuLoading && generationType === "audio" ? (
+                  {loading && generationType === "audio" ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
                     <Mic className="w-3 h-3" />
@@ -1554,13 +1525,13 @@ export default function WeaveItApp() {
                   onClick={() => {
                     const t: "audio" | "video" = "video";
                     setGenerationType(t);
-                    if (impromptuQuestion.trim()) handleImpromptuGenerate();
+                    if (impromptuQuestion.trim()) handleGenerate('video', impromptuQuestion);
                   }}
-                  disabled={impromptuLoading || !impromptuStatus.isValid}
-                  title={!impromptuStatus.isValid ? (impromptuStatus.category === "outrageous" ? "Content too long for Quick Help (max 2,000 words)" : "Add content") : ""}
+                  disabled={loading || !impromptuStatus.isValid}
+                  title={!impromptuStatus.isValid ? "Quick prompt exceeds 2,000 words" : "Generate video from quick prompt"}
                   className="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-1.5 transition"
                 >
-                  {impromptuLoading && generationType === "video" ? (
+                  {loading && generationType === "video" ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
                     <Video className="w-3 h-3" />
