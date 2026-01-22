@@ -1111,7 +1111,7 @@ export default function WeaveItApp() {
       const backendBaseUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
-      const renderVersion = selectedModel === "mona" ? "v1" : "v2";
+      const renderVersion = selectedModel === "mona" ? "v1" : selectedModel === "dona" ? "v3" : "v3";
 
       const response = await fetch(`${backendBaseUrl}${endpoint}?renderVersion=${renderVersion}`, {
         method: "POST",
@@ -1687,7 +1687,8 @@ export default function WeaveItApp() {
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> {loadingStep}
+                      {generationType === "video" ? <Video className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                      Generating...
                     </>
                   ) : (
                     <>
@@ -1705,7 +1706,8 @@ export default function WeaveItApp() {
                         style={{ width: `${progressPct}%` }}
                       ></div>
                     </div>
-                    <div className="text-xs text-slate-400 mt-1 text-center">
+                    <div className="text-xs text-slate-400 mt-1 text-center flex items-center justify-center gap-1.5">
+                      <Loader2 className="w-3 h-3 animate-spin" />
                       {loadingStep.split(' - ')[1] || loadingStep}
                     </div>
                   </div>
