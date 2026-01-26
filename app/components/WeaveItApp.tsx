@@ -1211,106 +1211,191 @@ export default function WeaveItApp() {
 
       const { jobId, title } = await response.json();
 
-      console.log(`📡 Video generation started with jobId: ${jobId}`);
+      // Construct WebSocket URL properly
+      const wsUrl = backendBaseUrl
+        .replace(/^https:/, "wss:")
+        .replace(/^http:/, "ws:")
+        .replace(/\/$/, "");
 
-      // Connect to WebSocket for real-time updates
-      const wsProtocol = backendBaseUrl.startsWith("https") ? "wss" : "ws";
-      const wsUrl = backendBaseUrl.replace(/^https?/, wsProtocol);
-      const ws = new WebSocket(wsUrl);
+      let ws: WebSocket | null = null;
+      let pollInterval: NodeJS.Timeout | null = null;
+      let wsConnected = false;
+      let completed = false;
+      let timeoutId: NodeJS.Timeout | undefined;
 
-      let connectionTimeout: NodeJS.Timeout;
-      let subscriptionSent = false;
-
-      ws.onopen = () => {
-        console.log("✅ WebSocket connected");
-        // Subscribe to job updates immediately
-        const subscriptionMsg = JSON.stringify({ action: "subscribe", jobId });
-        ws.send(subscriptionMsg);
-        subscriptionSent = true;
-        console.log(`📨 Subscribed to job: ${jobId}`);
-
-        // Set a timeout to ensure we got hooked
-        connectionTimeout = setTimeout(() => {
-          if (subscriptionSent) {
-            console.log("⏱️ Waiting for first update from server...");
-          }
-        }, 5000);
-      };
-
-      ws.onmessage = (event) => {
+      // Polling fallback function
+      const pollJobStatus = async () => {
         try {
-          const data = JSON.parse(event.data);
-          console.log(`📬 Update from server:`, data);
+          const statusResponse = await fetch(`${backendBaseUrl}/api/videos/status/${jobId}`);
+          if (!statusResponse.ok) return;
 
-          // Handle job status updates
-          if (data.jobId === jobId || data.status) {
-            clearTimeout(connectionTimeout);
+          const statusData = await statusResponse.json();
+          console.log("Polling job status:", statusData);
 
-            // Progress update
-            if (data.status === "processing" || data.status === "progress") {
-              const progress = data.progress ?? 0;
-              setProgressPct(progress);
-              setLoadingStep(data.message || `Processing... ${progress}%`);
-              console.log(`⏳ Progress: ${progress}%`);
+          if (statusData.status === "processing" && statusData.progress) {
+            if (!wsConnected) {
+              setProgressPct(statusData.progress);
+              setLoadingStep(`Processing... (${statusData.progress}%)`);
             }
+          }
 
-            // Video completed
-            if (data.status === "completed") {
+          if (statusData.status === "completed") {
+            if (!completed) {
+              completed = true;
               setProgressPct(100);
-              console.log(`✅ Generation complete!`, data);
+              setLoadingStep("Finalizing...");
 
-              const contentId = data.videoId || data.audioId || data.id;
-              const contentUrl =
-                genType === "audio"
-                  ? `${backendBaseUrl}/api/audio/${contentId}`
-                  : `${backendBaseUrl}/api/videos/${contentId}`;
+              // Give webhook time to save video to database
+              await new Promise(resolve => setTimeout(resolve, 2000));
 
-              handleVideoGenerated(contentUrl, title || data.title, genType);
-              setSuccess("✨ Generation complete!");
+              const contentId = statusData.videoId || jobId;
+              const contentUrl = genType === "audio" 
+                ? `${backendBaseUrl}/api/audio/${contentId}` 
+                : `${backendBaseUrl}/api/videos/${contentId}`;
+
+              console.log("Job completed via polling, loading content from:", contentUrl);
+              handleVideoGenerated(contentUrl, title, genType);
+              setSuccess("Completed!");
               setLoading(false);
               setLoadingStep("");
 
               // Update points locally after generation
-              setPoints((prev) =>
-                typeof prev === "number" ? prev - (genType === "video" ? 2 : 1) : prev
-              );
+              setPoints(prev => typeof prev === 'number' ? prev - (genType === "video" ? 2 : 1) : prev);
 
-              ws.close();
-              console.log("🔌 WebSocket closed");
-            }
+              // Refetch user content to ensure latest videos are shown
+              setTimeout(() => {
+                fetchUserContent();
+              }, 1000);
 
-            // Generation failed
-            if (data.status === "failed" || data.status === "error") {
-              console.error(`❌ Generation failed:`, data);
-              setError(data.error || data.message || "Generation failed");
-              setProgressPct(0);
-              setLoading(false);
-              setLoadingStep("");
-              ws.close();
+              // Stop polling and timeout
+              if (pollInterval) clearInterval(pollInterval);
+              if (timeoutId) clearTimeout(timeoutId);
+              if (ws) ws.close();
             }
           }
-        } catch (parseErr) {
-          console.error("Error parsing WebSocket message:", parseErr);
+
+          if (statusData.status === "failed") {
+            if (!completed) {
+              completed = true;
+              setError(statusData.error || "Job failed");
+              setLoading(false);
+              setLoadingStep("");
+
+              // Stop polling and timeout
+              if (pollInterval) clearInterval(pollInterval);
+              if (timeoutId) clearTimeout(timeoutId);
+              if (ws) ws.close();
+            }
+          }
+        } catch (err) {
+          console.error("Polling error:", err);
         }
       };
 
-      ws.onerror = (error) => {
-        console.error("❌ WebSocket error:", error);
-        setError("Connection error - generation may continue in background");
-        setLoading(false);
-        setLoadingStep("");
-        // Don't close on error - let it attempt reconnect
-      };
+      // Start polling immediately as fallback
+      pollInterval = setInterval(pollJobStatus, 3000);
 
-      ws.onclose = () => {
-        console.log("🔌 WebSocket disconnected");
-        clearTimeout(connectionTimeout);
-        // If still loading, switch to polling as fallback
-        if (loading) {
-          console.log("⚠️ WebSocket closed but generation still in progress - using polling fallback");
-          pollJobStatus(jobId, genType, backendBaseUrl, title);
+      // Safety timeout - if job doesn't complete within 15 minutes, stop loading
+      timeoutId = setTimeout(() => {
+        if (!completed) {
+          completed = true;
+          setError("Generation timeout - please check your videos panel for results");
+          setLoading(false);
+          setLoadingStep("");
+          if (pollInterval) clearInterval(pollInterval);
+          if (ws) ws.close();
         }
-      };
+      }, 15 * 60 * 1000); // 15 minutes
+
+      // Try to connect WebSocket for real-time updates
+      try {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          wsConnected = true;
+          console.log("WebSocket connected, subscribing to jobId:", jobId);
+          ws!.send(JSON.stringify({ action: "subscribe", jobId }));
+          setLoadingStep("Connected to server, processing...");
+          // Stop polling once WS is connected
+          if (pollInterval) clearInterval(pollInterval);
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log("WebSocket message received:", data);
+
+            if (data.type === "progress") {
+              setProgressPct(data.progress ?? 0);
+              setLoadingStep(data.message || "Processing...");
+            }
+
+            if (data.type === "completed") {
+              if (!completed) {
+                completed = true;
+                setProgressPct(100);
+                const contentId = data.videoId || data.audioId || jobId;
+                const contentUrl = genType === "audio" 
+                  ? `${backendBaseUrl}/api/audio/${contentId}` 
+                  : `${backendBaseUrl}/api/videos/${contentId}`;
+
+                console.log("Generation completed, loading content from:", contentUrl);
+                handleVideoGenerated(contentUrl, title, genType);
+                setSuccess("Completed!");
+                setLoading(false);
+                setLoadingStep("");
+
+                // Update points locally after generation
+                setPoints(prev => typeof prev === 'number' ? prev - (genType === "video" ? 2 : 1) : prev);
+
+                // Refetch user content to ensure latest videos are shown
+                setTimeout(() => {
+                  fetchUserContent();
+                }, 1000);
+
+                // Stop polling and timeout
+                if (pollInterval) clearInterval(pollInterval);
+                if (timeoutId) clearTimeout(timeoutId);
+                ws!.close();
+              }
+            }
+
+            if (data.type === "error") {
+              if (!completed) {
+                completed = true;
+                setError(data.error || "Generation failed");
+                setProgressPct(0);
+                setLoading(false);
+                setLoadingStep("");
+
+                // Stop polling and timeout
+                if (pollInterval) clearInterval(pollInterval);
+                if (timeoutId) clearTimeout(timeoutId);
+                ws!.close();
+              }
+            }
+          } catch (parseError) {
+            console.error("Failed to parse WebSocket message:", parseError);
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error("WebSocket error:", error);
+          // Don't show error yet - polling will continue
+          console.log("WebSocket failed, continuing with polling fallback");
+          wsConnected = false;
+        };
+
+        ws.onclose = () => {
+          console.log("WebSocket connection closed");
+          wsConnected = false;
+          // Don't stop polling - it will handle completion
+        };
+      } catch (wsError) {
+        console.error("WebSocket connection error:", wsError);
+        console.log("WebSocket unavailable, using polling fallback");
+        // Polling already started above
+      }
     } catch (err: any) {
       setError(err.message || "Generation failed");
       setLoading(false);
