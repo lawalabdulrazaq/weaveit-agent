@@ -26,6 +26,7 @@ import {
   Loader2,
   Film,
   Mic,
+  Trash2,
 } from "lucide-react"
 import Pricing from "./Pricing"
 
@@ -627,6 +628,8 @@ export default function WeaveItApp() {
   const [backendError, setBackendError] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [showPricing, setShowPricing] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ videoId: string; title: string } | null>(null)
+  const [hoveredVideoId, setHoveredVideoId] = useState<string | null>(null)
 
   const showComingSoon = (msg: string) => {
     setToastMessage(msg)
@@ -648,6 +651,14 @@ export default function WeaveItApp() {
       return () => clearTimeout(timer)
     }
   }, [success])
+
+  // Auto-dismiss toast message after 5 seconds
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [toastMessage])
 
   // CRITICAL FIX: Only fetch user content AFTER initial render
   // This prevents blocking the page load with API calls
@@ -721,7 +732,10 @@ export default function WeaveItApp() {
         console.error("Failed to fetch content:", errorMsg)
         // Don't set videos to empty on error - keep existing state
         // User will see a warning but won't lose their data
-        setToastMessage(`Unable to load content: ${errorMsg}`)
+        const userFriendlyMsg = errorMsg.includes('timeout') || errorMsg.includes('signal is aborted') 
+          ? 'Connection timeout. Please check your backend server is running.' 
+          : errorMsg
+        setToastMessage(`Unable to load content: ${userFriendlyMsg}`)
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error)
@@ -1007,6 +1021,7 @@ export default function WeaveItApp() {
         setCurrentVideo(null)
       }
 
+      setDeleteConfirm(null)
       showComingSoon("Video deleted successfully")
     } catch (err) {
       console.error("Error deleting video:", err)
@@ -1514,6 +1529,45 @@ export default function WeaveItApp() {
         </div>
       )}
 
+      {deleteConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setDeleteConfirm(null)}
+        >
+          <div
+            className="max-w-sm w-full bg-slate-900 rounded-xl shadow-xl p-6 border border-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                <X className="w-5 h-5 text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Delete Video?</h3>
+            </div>
+            
+            <p className="text-slate-300 mb-2">Are you sure you want to delete:</p>
+            <p className="text-slate-400 text-sm mb-6 italic truncate">"{deleteConfirm.title}"</p>
+            
+            <p className="text-xs text-slate-500 mb-6">This action cannot be undone.</p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteVideo(deleteConfirm.videoId)}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {backendError && (
         <div className="bg-red-600/10 border-t border-b border-red-500/20 text-red-300 text-sm px-4 py-2">
           {backendError}
@@ -1962,31 +2016,42 @@ export default function WeaveItApp() {
                 {videos.map((v) => (
                   <div
                     key={v.id}
-                    className="group w-full p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition"
+                    className="w-full p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition flex items-center gap-2 group"
+                    onMouseEnter={() => setHoveredVideoId(v.id)}
+                    onMouseLeave={() => setHoveredVideoId(null)}
                   >
                     <button
-                      onClick={() => setCurrentVideo({ url: v.url, title: v.title })}
-                      className="w-full text-left"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setDeleteConfirm({ videoId: v.id, title: v.title || "Untitled" })
+                      }}
+                      className={`flex-shrink-0 p-1.5 rounded transition ${
+                        hoveredVideoId === v.id
+                          ? "bg-red-500/20 text-red-400"
+                          : "bg-slate-700/50 text-slate-400"
+                      }`}
+                      title="Delete video"
                     >
-                      <div className="flex items-center gap-2">
+                      {hoveredVideoId === v.id ? (
+                        <Trash2 className="w-4 h-4" />
+                      ) : (
+                        <X className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => setCurrentVideo({ url: v.url, title: v.title })}
+                      className="flex-1 text-left min-w-0"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
                         {v.type === "video" ? (
-                          <Film className="w-4 h-4 text-violet-400" />
+                          <Film className="w-4 h-4 text-violet-400 flex-shrink-0" />
                         ) : (
-                          <Mic className="w-4 h-4 text-pink-400" />
+                          <Mic className="w-4 h-4 text-pink-400 flex-shrink-0" />
                         )}
                         <span className="text-sm font-medium truncate">{v.title || "Untitled"}</span>
                       </div>
                       <div className="text-xs text-slate-500 mt-1">{new Date(v.createdAt).toLocaleDateString()}</div>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteVideo(v.id)
-                      }}
-                      className="mt-2 w-full p-1.5 text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded border border-red-500/30 hover:border-red-500/50 transition flex items-center justify-center gap-1"
-                    >
-                      <X className="w-3 h-3" />
-                      Delete
                     </button>
                   </div>
                 ))}

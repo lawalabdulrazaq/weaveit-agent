@@ -48,7 +48,7 @@ export async function fetchUserContent(walletAddress: string): Promise<{
     clearTimeout(timeout)
     return handleResponse(resp)
   } catch (error) {
-    if (error instanceof TypeError && error.message.includes('abort')) {
+    if (error instanceof TypeError && (error.message.includes('abort') || error.message.includes('signal is aborted'))) {
       throw new Error(`Request timeout while fetching content from ${url}`)
     }
     throw error
@@ -80,8 +80,8 @@ export async function fetchUserPoints(walletAddress: string): Promise<{ points?:
     clearTimeout(timeout)
     return handleResponse(resp)
   } catch (error) {
-    if (error instanceof TypeError && error.message.includes('abort')) {
-      throw new Error(`Request timeout while fetching points from ${url}`)
+    if (error instanceof TypeError && (error.message.includes('abort') || error.message.includes('signal is aborted'))) {
+      throw new Error(`Request timeout while fetching user points from ${url}`)
     }
     throw error
   }
