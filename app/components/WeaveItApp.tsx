@@ -761,6 +761,7 @@ export default function WeaveItApp() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const unifiedTextareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const questionInputRef = useRef<HTMLInputElement | null>(null)
 
   const handleUploadClick = () => {
     fileInputRef.current?.click()
@@ -1490,8 +1491,9 @@ export default function WeaveItApp() {
               )}
 
               {/* Question Bar + Impromptu Generation */}
-              <div className="flex items-center gap-2 p-3 bg-slate-900/80 rounded-xl border border-slate-700 mb-4">
+              <div className="flex items-center gap-2 p-3 bg-slate-900/80 rounded-xl border border-slate-700 mb-4" onClick={() => questionInputRef.current?.focus()}>
                 <input
+                  ref={questionInputRef}
                   type="text"
                   value={impromptuQuestion}
                   onChange={(e) => setImpromptuQuestion(e.target.value)}

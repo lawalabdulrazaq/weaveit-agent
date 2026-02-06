@@ -4,8 +4,10 @@ import Link from "next/link";
 import {
   ArrowRight,
   Sparkles,
+  Volume,
+  VolumeX,
 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
 function ThunderIcon({ className = "w-5 h-5" }: { className?: string }) {
@@ -77,6 +79,8 @@ function GridBackground() {
 }
 
 export default function Hero() {
+  const [videoMuted, setVideoMuted] = useState(true)
+
   return (
     <section className="relative pt-32 pb-20 overflow-hidden">
 
@@ -226,16 +230,25 @@ export default function Hero() {
                     </div>
                   </div>
 
-                  <div className="bg-black rounded-lg aspect-video flex items-center justify-center">
+                  <div className="bg-black rounded-lg aspect-video flex items-center justify-center relative">
                     <video
                       autoPlay
-                      muted
+                      muted={videoMuted}
                       loop
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover cursor-pointer"
+                      onClick={() => setVideoMuted(!videoMuted)}
                     >
                       <source src="/demo.mp4" type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
+
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setVideoMuted(!videoMuted); }}
+                      aria-label={videoMuted ? "Unmute video" : "Mute video"}
+                      className="absolute bottom-3 right-3 z-10 bg-black/60 hover:bg-black/70 text-white p-2 rounded-full flex items-center justify-center transition"
+                    >
+                      {videoMuted ? <VolumeX className="w-4 h-4" /> : <Volume className="w-4 h-4" />}
+                    </button>
                   </div>
 
                 </motion.div>
